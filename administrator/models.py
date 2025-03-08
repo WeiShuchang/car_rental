@@ -2,30 +2,54 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.utils.timezone import now
 from datetime import timedelta
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-# Custom User Model
-class UserProfile(models.Model):  
-    user = models.OneToOneField(User, on_delete=models.CASCADE)  
-    ROLE_CHOICES = (  
-        ('user', 'User'),  
-        ('driver', 'Driver'),  
-        ('admin', 'Admin'),  
-    )  
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')  
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    ROLE_CHOICES = (
+        ('user', 'User'),
+        ('driver', 'Driver'),
+        ('admin', 'Admin'),
+    )
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
 
-    def __str__(self):  
-        return self.user.username  
+    def __str__(self):
+        return self.user.username
 
-# Driver Model
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.userprofile.save()
+
 class Driver(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     license_number = models.CharField(max_length=50, unique=True)
     phone_number = models.CharField(max_length=15, unique=True)
+    image = models.ImageField(upload_to='driver_images/', default='driver_images/default.jpg', blank=True, null=True)
 
     def __str__(self):
         return f"{self.user.username} - {self.license_number}"
 
-# Car Model
+    @classmethod
+    def create_driver(cls, username, password, license_number, phone_number, image=None):
+        user = User.objects.create_user(username=username, password=password)
+        user_profile = user.userprofile
+        user_profile.role = 'driver'
+        user_profile.save()
+
+        driver = cls.objects.create(
+            user=user, 
+            license_number=license_number, 
+            phone_number=phone_number, 
+            image=image
+        )
+        return driver
+    
 class Car(models.Model):
     BODY_TYPES = (
         ('sedan', 'Sedan'),

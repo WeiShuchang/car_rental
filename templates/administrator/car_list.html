@@ -1,5 +1,5 @@
 {% extends 'administrator/base.html' %}  <!-- Assuming you have a base template -->
-
+{% load humanize %}
 {% block content %}
 <style>
     #message-container {
@@ -33,6 +33,20 @@
     .pagination .page-item {
         margin: 0 5px; /* Add margin to each page item for spacing */
     }
+    .image-container {
+        width: 100px;
+        height: 80px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 </style>
 <div class="page-wrapper">
     <div class="page-header d-print-none mb-2">
@@ -40,7 +54,7 @@
             <div class="row g-2 align-items-center">
                 <div class="col">
                     <div class="page-pretitle">
-                        Overview
+                        Ashley's Car Rental
                     </div>
                     <h2 class="page-title">
                         Cars
@@ -65,6 +79,17 @@
     <div class="page-body container">
         <div class="row g-2 container">
             <div class="col-12">
+                {% for message in messages %}
+                <div class="alert 
+                    {% if message.tags == 'success' %}alert-success
+                    {% elif message.tags == 'error' %}alert-danger
+                    {% elif message.tags == 'warning' %}alert-warning
+                    {% endif %}
+                    alert-dismissible fade show" role="alert">
+                    {{ message|linebreaksbr }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
                 <div id="message-container" class="alert d-none mb-3"></div>
                 <div class="card">
                     <div class="table-responsive">
@@ -78,7 +103,6 @@
                                     <th>Year</th>
                                     <th>Plate Number</th>
                                     <th>Body Type</th>
-                               
                                     <th>Price Per Hour</th>
                                     <th>Price Per Day</th>
                                     <th>Edit</th>
@@ -86,52 +110,71 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for car in cars %}
-                                <tr> 
-                                    <td>
-                                        {% if car.available %}
-                                            <span class="badge bg-success"></span>
-                                        {% else %}
-                                            <span class="badge bg-danger"></span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if car.image %}
-                                            <img src="{{ car.image.url }}" alt="{{ car.brand }}" class="img-thumbnail" width="100">
-                                        {% else %}
-                                            <span class="text-muted">No Image</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ car.brand }}</td>
-                                    <td>{{ car.model }}</td>
-                                    <td>{{ car.year }}</td>
-                                    <td>{{ car.plate_number }}</td>
-                                    <td>{{ car.get_body_type_display }}</td>
-                                   
-                                    <td>${{ car.price_per_hour }}</td>
-                                    <td>${{ car.price_per_day }}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modal-edit" data-id="{{ car.id }}"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
-                                            <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                                            <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
-                                          </svg></button>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-danger btn-sm delete-btn" data-id="{{ car.id }}" data-bs-toggle="modal" data-bs-target="#modal-delete">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
-                                                <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
-                                              </svg>
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
+                                {% if cars %}
+                                    {% for car in cars %}
+                                    <tr> 
+                                        <td class="align-items-center text-center">
+                                            {% if car.available %}
+                                                <span class="badge bg-success"></span>
+                                            {% else %}
+                                                <span class="badge bg-danger"></span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if car.image %}
+                                                <div class="image-container">
+                                                    <img src="{{ car.image.url }}" alt="{{ car.brand }}" class="img-thumbnail">
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">No Image</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ car.brand }}</td>
+                                        <td>{{ car.model }}</td>
+                                        <td>{{ car.year }}</td>
+                                        <td>{{ car.plate_number }}</td>
+                                        <td>{{ car.get_body_type_display }}</td>
+                                        <td>₱{{ car.price_per_hour|intcomma }}</td>
+                                        <td>₱{{ car.price_per_day|intcomma }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary edit-car-btn" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#modal-edit"
+                                                    data-id="{{ car.id }}"
+                                                    data-brand="{{ car.brand }}"
+                                                    data-model="{{ car.model }}"
+                                                    data-year="{{ car.year }}"
+                                                    data-plate-number="{{ car.plate_number }}"
+                                                    data-body-type="{{ car.body_type }}"
+                                                    data-available="{{ car.available|lower }}" 
+                                                    data-price-per-hour="{{ car.price_per_hour }}"
+                                                    data-price-per-day="{{ car.price_per_day }}"
+                                                    data-image="{% if car.image %}{{ car.image.url }}{% endif %}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                        <td>  
+                                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modal-delete" data-delete-url="{% url 'delete_car' car.id %}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="11" class="text-center text-muted">No cars available</td>
+                                    </tr>
+                                {% endif %}
                             </tbody>
                         </table>
                         
-
-                       
                     </div>
-                    
                 </div>
             </div>
         </div>
@@ -189,6 +232,7 @@
         </div>
     </div>
 </div>
+
 <!-- Add Car Modal -->
 <div class="modal fade" id="modal-car" tabindex="-1" aria-labelledby="modal-car-label" aria-hidden="true">
     <div class="modal-dialog">
@@ -198,183 +242,213 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="add-car-form">
+                {% if error_message %}
+                    <div class="alert alert-danger">{{ error_message }}</div>
+                {% endif %}
+                <form id="add-car-form" method="POST" enctype="multipart/form-data" action="{% url 'add_car' %}">
                     {% csrf_token %}
                     <div class="row">
                         <div class="mb-3 col-md-6">
                             <label for="brand" class="form-label">Brand</label>
-                            <input type="text" class="form-control" id="brand" name="brand" required>
+                            <input type="text" class="form-control {% if form.brand.errors %}is-invalid{% endif %}" id="brand" name="brand" value="{{ form.brand.value|default_if_none:'' }}" required>
+                            <div class="invalid-feedback">{{ form.brand.errors|first }}</div>
                         </div>
                         <div class="mb-3 col-md-6">
                             <label for="model" class="form-label">Model</label>
-                            <input type="text" class="form-control" id="model" name="model" required>
+                            <input type="text" class="form-control {% if form.model.errors %}is-invalid{% endif %}" id="model" name="model" value="{{ form.model.value|default_if_none:'' }}" required>
+                            <div class="invalid-feedback">{{ form.model.errors|first }}</div>
                         </div>
                         <div class="mb-3 col-md-6">
                             <label for="year" class="form-label">Year</label>
-                            <input type="number" class="form-control" id="year" name="year" required>
+                            <input type="number" class="form-control {% if form.year.errors %}is-invalid{% endif %}" id="year" name="year" value="{{ form.year.value|default_if_none:'' }}" required>
+                            <div class="invalid-feedback">{{ form.year.errors|first }}</div>
                         </div>
                         <div class="mb-3 col-md-6">
                             <label for="plate_number" class="form-label">Plate Number</label>
-                            <input type="text" class="form-control" id="plate_number" name="plate_number" required>
+                            <input type="text" class="form-control {% if form.plate_number.errors %}is-invalid{% endif %}" id="plate_number" name="plate_number" value="{{ form.plate_number.value|default_if_none:'' }}" required>
+                            <div class="invalid-feedback">{{ form.plate_number.errors|first }}</div>
                         </div>
                         <div class="mb-3 col-md-6">
                             <label for="body_type" class="form-label">Body Type</label>
-                            <select class="form-control" id="body_type" name="body_type" required>
-                                <option value="sedan">Sedan</option>
-                                <option value="suv">SUV</option>
-                                <option value="truck">Truck</option>
-                                <option value="coupe">Coupe</option>
+                            <select class="form-control {% if form.body_type.errors %}is-invalid{% endif %}" id="body_type" name="body_type" required>
+                                <option value="sedan" {% if form.body_type.value == "sedan" %}selected{% endif %}>Sedan</option>
+                                <option value="suv" {% if form.body_type.value == "suv" %}selected{% endif %}>SUV</option>
+                                <option value="truck" {% if form.body_type.value == "truck" %}selected{% endif %}>Truck</option>
+                                <option value="coupe" {% if form.body_type.value == "coupe" %}selected{% endif %}>Coupe</option>
                             </select>
+                            <div class="invalid-feedback">{{ form.body_type.errors|first }}</div>
                         </div>
                         <div class="mb-3 col-md-6">
                             <label for="price_per_hour" class="form-label">Price Per Hour</label>
-                            <input type="number" step="0.01" class="form-control" id="price_per_hour" name="price_per_hour" required>
+                            <input type="number" step="0.01" class="form-control {% if form.price_per_hour.errors %}is-invalid{% endif %}" id="price_per_hour" name="price_per_hour" value="{{ form.price_per_hour.value|default_if_none:'' }}" required>
+                            <div class="invalid-feedback">{{ form.price_per_hour.errors|first }}</div>
                         </div>
                         <div class="mb-3 col-md-6">
                             <label for="price_per_day" class="form-label">Price Per Day</label>
-                            <input type="number" step="0.01" class="form-control" id="price_per_day" name="price_per_day" required>
+                            <input type="number" step="0.01" class="form-control {% if form.price_per_day.errors %}is-invalid{% endif %}" id="price_per_day" name="price_per_day" value="{{ form.price_per_day.value|default_if_none:'' }}" required>
+                            <div class="invalid-feedback">{{ form.price_per_day.errors|first }}</div>
                         </div>
                         <div class="mb-3 col-md-6">
                             <label for="available" class="form-label">Availability</label>
-                            <select class="form-control" id="available" name="available" required>
-                                <option value="true">Available</option>
-                                <option value="false">Not Available</option>
+                            <select class="form-control {% if form.available.errors %}is-invalid{% endif %}" id="available" name="available" required>
+                                <option value="true" {% if form.available.value == True %}selected{% endif %}>Available</option>
+                                <option value="false" {% if form.available.value == False %}selected{% endif %}>Not Available</option>
                             </select>
+                            <div class="invalid-feedback">{{ form.available.errors|first }}</div>
                         </div>
                         <div class="mb-3 col-md-6">
                             <label for="image" class="form-label">Car Image</label>
-                            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                            <input type="file" class="form-control {% if form.image.errors %}is-invalid{% endif %}" id="image" name="image" accept="image/*">
+                            <div class="invalid-feedback">{{ form.image.errors|first }}</div>
                         </div>
                     </div>
-                 
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Add Car</button>
+                    </div>
                 </form>
-            </div>
-            <div class="modal-footer ">
-  
-                <button type="button" class="btn btn-primary" id="save-car">Add Car</button>
             </div>
         </div>
     </div>
 </div>
+
+
+
+<!-- Edit Car Modal -->
+<div class="modal fade" id="modal-edit" tabindex="-1" aria-labelledby="editCarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCarLabel">Edit Car</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editCarForm" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" id="editCarId" name="car_id">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="editBrand" class="form-label">Brand</label>
+                            <input type="text" class="form-control" id="editBrand" name="brand" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editModel" class="form-label">Model</label>
+                            <input type="text" class="form-control" id="editModel" name="model" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editYear" class="form-label">Year</label>
+                            <input type="number" class="form-control" id="editYear" name="year" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editPlateNumber" class="form-label">Plate Number</label>
+                            <input type="text" class="form-control" id="editPlateNumber" name="plate_number" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editBodyType" class="form-label">Body Type</label>
+                            <select class="form-select" id="editBodyType" name="body_type" required>
+                                <option value="sedan">Sedan</option>
+                                <option value="suv">SUV</option>
+                                <option value="truck">Truck</option>
+                                <option value="van">Van</option>
+                                <option value="bus">Bus</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editAvailability" class="form-label">Availability</label>
+                            <select class="form-select" id="editAvailability" name="available" required>
+                                <option value="true">Available</option>
+                                <option value="false">Unavailable</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editPricePerHour" class="form-label">Price Per Hour</label>
+                            <input type="number" step="0.01" class="form-control" id="editPricePerHour" name="price_per_hour" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editPricePerDay" class="form-label">Price Per Day</label>
+                            <input type="number" step="0.01" class="form-control" id="editPricePerDay" name="price_per_day" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editImage" class="form-label">Car Image</label>
+                            <input type="file" class="form-control" id="editImage" name="image">
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <img id="current_image" src="" alt="Car Image" class="img-thumbnail" width="100" style="display: none;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<form id="delete-form" method="POST" style="display: none;">
+    {% csrf_token %}
+</form>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        let carIdToDelete = null;
-        let rowToDelete = null;
-
-        // Handle add car form submission (unchanged)
-        document.getElementById("save-car").addEventListener("click", function () {
-            var form = document.getElementById("add-car-form");
-            var formData = new FormData(form);
-
-            fetch("{% url 'add_car' %}", {
-                method: "POST",
-                body: formData
-            })
-            .then(response => response.json())
-            .then(body => {
-                var messageContainer = document.getElementById("message-container");
-                var modal = bootstrap.Modal.getInstance(document.getElementById("modal-car"));
-
-                // Clear previous errors
-                document.querySelectorAll(".invalid-feedback").forEach(el => el.remove());
-                document.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
-
-                if (body.status === "success") {
-                    modal.hide();
-                    messageContainer.textContent = body.message;
-                    messageContainer.classList.remove("d-none", "alert-danger");
-                    messageContainer.classList.add("alert-success");
-
-                    var newCar = body.car;
-                    var tableBody = document.querySelector(".datatable tbody");
-                    var newRow = document.createElement("tr");
-                    newRow.setAttribute("id", `row-${newCar.id}`); // Unique row ID
-                    newRow.innerHTML = `
-                        <td>${newCar.available ? '<span class="badge bg-success"></span>' : '<span class="badge bg-danger"></span>'}</td>
-                        <td><img src="${body.image_url}" alt="${newCar.brand}" class="img-thumbnail" width="100"></td>
-                        <td>${newCar.brand}</td>
-                        <td>${newCar.model}</td>
-                        <td>${newCar.year}</td>
-                        <td>${newCar.plate_number}</td>
-                        <td>${newCar.body_type}</td>
-                        <td>$${newCar.price_per_hour}</td>
-                        <td>$${newCar.price_per_day}</td>
-                        <td>
-                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modal-edit" data-id="${newCar.id}">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
-                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
-                                </svg>
-                            </button>
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-danger delete-car" data-id="${newCar.id}" data-bs-toggle="modal" data-bs-target="#modal-delete"> 
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
-                                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
-                                </svg>
-                            </button>
-                        </td>
-                    `;
-                    tableBody.insertBefore(newRow, tableBody.firstChild);
-                } else {
-                    Object.keys(body.errors).forEach(field => {
-                        var inputField = document.querySelector(`[name="${field}"]`);
-                        if (inputField) {
-                            inputField.classList.add("is-invalid");
-                            var errorDiv = document.createElement("div");
-                            errorDiv.className = "invalid-feedback";
-                            errorDiv.textContent = body.errors[field].join(", ");
-                            inputField.parentNode.appendChild(errorDiv);
-                        }
-                    });
-
-                    messageContainer.textContent = "Please fix the errors in the form.";
-                    messageContainer.classList.remove("d-none", "alert-success");
-                    messageContainer.classList.add("alert-danger");
-                }
-
-                setTimeout(() => {
-                    messageContainer.classList.add("d-none");
-                }, 2000);
-            })
-            .catch(error => console.error("Error:", error));
+        let deleteUrl = "";
+        const deleteForm = document.getElementById("delete-form");
+        const confirmDeleteBtn = document.getElementById("confirm-delete");
+    
+        document.querySelectorAll("[data-bs-target='#modal-delete']").forEach(button => {
+            button.addEventListener("click", function () {
+                deleteUrl = this.getAttribute("data-delete-url"); // Store the delete URL
+            });
         });
-
-        // Capture the car ID and row when clicking delete
-        $(document).on("click", ".delete-car", function () {
-            carIdToDelete = $(this).data("id");
-            rowToDelete = $(`#row-${carIdToDelete}`);
-        });
-        
-        $("#confirm-delete").click(function () {
-            if (carIdToDelete) {
-                $.ajax({
-                    url: "{% url 'delete_car' %}",
-                    type: "POST",
-                    data: {
-                        "id": carIdToDelete,
-                        "csrfmiddlewaretoken": $('input[name="csrfmiddlewaretoken"]').val()  // CSRF token
-                    },
-                    success: function (response) {
-                        if (response.status === "success") {
-                            $("#modal-delete").modal("hide");
-        
-                            // Animate and remove row
-                            rowToDelete.fadeOut(300, function () {
-                                $(this).remove();
-                            });
-                        } else {
-                            alert(response.message);
-                        }
-                    },
-                    error: function () {
-                        alert("Failed to communicate with the server.");
-                    }
-                });
+    
+        confirmDeleteBtn.addEventListener("click", function () {
+            if (deleteUrl) {
+                deleteForm.setAttribute("action", deleteUrl);
+                deleteForm.submit(); // Submit the form
             }
         });
-        
     });
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const editModal = document.getElementById("modal-edit");
 
+        editModal.addEventListener("show.bs.modal", function (event) {
+            // Get the button that triggered the modal
+            const button = event.relatedTarget;
+
+            // Get the car ID from the button's data-id attribute
+            const carId = button.getAttribute("data-id");
+
+            // Set the form action dynamically
+            const editForm = document.getElementById("editCarForm");
+            editForm.action = `/administrator/cars/${carId}/edit/`;
+
+            // Populate the form fields using data-* attributes
+            document.getElementById("editCarId").value = carId;
+            document.getElementById("editBrand").value = button.getAttribute("data-brand");
+            document.getElementById("editModel").value = button.getAttribute("data-model");
+            document.getElementById("editYear").value = button.getAttribute("data-year");
+            document.getElementById("editPlateNumber").value = button.getAttribute("data-plate-number");
+            document.getElementById("editBodyType").value = button.getAttribute("data-body-type");
+            document.getElementById("editPricePerHour").value = button.getAttribute("data-price-per-hour");
+            document.getElementById("editPricePerDay").value = button.getAttribute("data-price-per-day");
+
+            // Set availability dropdown
+            const availabilitySelect = document.getElementById("editAvailability");
+            const availability = button.getAttribute("data-available"); // "true" or "false"
+            availabilitySelect.value = availability; // Directly set the value
+
+            // Set the image preview if it exists
+            const imageUrl = button.getAttribute("data-image");
+            const currentImage = document.getElementById("current_image");
+            if (imageUrl) {
+                currentImage.src = imageUrl;
+                currentImage.style.display = "block"; // Ensure the image is visible
+            } else {
+                currentImage.src = "";
+                currentImage.style.display = "none"; // Hide the image if no URL is provided
+            }
+        });
+    });
+</script>
 {% endblock %}
