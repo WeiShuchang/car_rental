@@ -7,6 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
     <meta name="csrf-token" content="{{ csrf_token }}">
     <title>Inventory Dashboard</title>
+
     <!-- CSS files -->
     {% comment %} <link href="{% static 'iro_logo.png' %}" rel="icon"> {% endcomment %}
     <link href="{% static 'administrator/ui/dist/css/tabler.min.css' %}" rel="stylesheet"/>
@@ -93,7 +94,7 @@
                           <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
                       </svg>
                   </a>
-                  <form id="logout-form" action="" method="POST" style="display: none;">
+                  <form id="logout-form" action="{% url 'logout' %}" method="POST" style="display: none;">
                       {% csrf_token %}
                   </form>
               </li>

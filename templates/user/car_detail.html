@@ -1,0 +1,64 @@
+{% extends "user/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<style>
+    .car-detail-box {
+        background: #fff;
+        padding: 15px; /* Reduce padding */
+        border-radius: 10px;
+        box-shadow: none;
+    }
+    
+    .car-detail-box .row {
+        align-items: center; /* Aligns the image and text vertically */
+    }
+    
+    .car-detail-box img {
+        height: 100%; /* Ensures the image takes full height */
+        object-fit: cover; /* Prevents distortion */
+    }
+    
+    .car-detail-box .col-md-6 {
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* Center text vertically */
+    }
+    
+    .car-detail-box h2,
+    .car-detail-box h3,
+    .car-detail-box p {
+        margin-bottom: 5px; /* Reduce spacing */
+    }
+    
+    .btn.btn-primary {
+        margin-top: 10px; /* Smaller margin above the button */
+    }
+    
+</style>
+
+<section class="ftco-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="car-detail-box">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <img src="{% if car.image %}{{ car.image.url }}{% else %}{% static 'user_side/images/default_car.jpg' %}{% endif %}" class="img-fluid rounded shadow" alt="{{ car.brand }} {{ car.model }}">
+                        </div>
+                        <div class="col-md-6">
+                            <h3 class="mb-3">{{ car.brand }} {{ car.model }} ({{ car.year }})</h3>
+                            <p class="text-muted"><strong>Body Type:</strong> {{ car.get_body_type_display }}</p>
+                            <p class="text-muted"><strong>Plate Number:</strong> {{ car.plate_number }}</p>
+                            <h4 class="text-primary">₱{{ car.price_per_hour|floatformat:2|intcomma }} / hour</h4>
+                            <h4 class="text-dark">₱{{ car.price_per_day|floatformat:2|intcomma }} / day</h4>
+                            <a href="#" class="btn btn-primary mt-3">Rent This Car</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

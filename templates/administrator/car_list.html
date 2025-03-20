@@ -47,6 +47,7 @@
         height: 100%;
         object-fit: cover;
     }
+    
 </style>
 <div class="page-wrapper">
     <div class="page-header d-print-none mb-2">
@@ -105,8 +106,7 @@
                                     <th>Body Type</th>
                                     <th>Price Per Hour</th>
                                     <th>Price Per Day</th>
-                                    <th>Edit</th>
-                                    <th>Delete</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -137,42 +137,43 @@
                                         <td>₱{{ car.price_per_hour|intcomma }}</td>
                                         <td>₱{{ car.price_per_day|intcomma }}</td>
                                         <td>
-                                            <button class="btn btn-sm btn-primary edit-car-btn" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#modal-edit"
-                                                    data-id="{{ car.id }}"
-                                                    data-brand="{{ car.brand }}"
-                                                    data-model="{{ car.model }}"
-                                                    data-year="{{ car.year }}"
-                                                    data-plate-number="{{ car.plate_number }}"
-                                                    data-body-type="{{ car.body_type }}"
-                                                    data-available="{{ car.available|lower }}" 
-                                                    data-price-per-hour="{{ car.price_per_hour }}"
-                                                    data-price-per-day="{{ car.price_per_day }}"
-                                                    data-image="{% if car.image %}{{ car.image.url }}{% endif %}">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
-                                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                                                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
-                                                </svg>
-                                            </button>
-                                        </td>
-                                        <td>  
-                                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modal-delete" data-delete-url="{% url 'delete_car' car.id %}">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
-                                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
-                                                </svg>
-                                            </button>
+                                            <div class="d-flex gap-1">
+                                                <button class="btn btn-sm btn-primary edit-car-btn" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#modal-edit"
+                                                        data-id="{{ car.id }}"
+                                                        data-brand="{{ car.brand }}"
+                                                        data-model="{{ car.model }}"
+                                                        data-year="{{ car.year }}"
+                                                        data-plate-number="{{ car.plate_number }}"
+                                                        data-body-type="{{ car.body_type }}"
+                                                        data-available="{{ car.available|lower }}" 
+                                                        data-price-per-hour="{{ car.price_per_hour }}"
+                                                        data-price-per-day="{{ car.price_per_day }}"
+                                                        data-image="{% if car.image %}{{ car.image.url }}{% endif %}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                                        <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                                        <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                                                    </svg>
+                                                </button>
+                                                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modal-delete" data-delete-url="{% url 'delete_car' car.id %}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}
                                 {% else %}
                                     <tr>
-                                        <td colspan="11" class="text-center text-muted">No cars available</td>
+                                        <td colspan="10" class="text-center text-muted">No cars available</td>
                                     </tr>
                                 {% endif %}
                             </tbody>
                         </table>
+                        
                         
                     </div>
                 </div>

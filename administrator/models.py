@@ -5,6 +5,7 @@ from datetime import timedelta
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     ROLE_CHOICES = (
@@ -13,6 +14,7 @@ class UserProfile(models.Model):
         ('admin', 'Admin'),
     )
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
+    contact_number = models.CharField(max_length=15, blank=True, null=True)  # New field
 
     def __str__(self):
         return self.user.username
@@ -31,9 +33,10 @@ class Driver(models.Model):
     license_number = models.CharField(max_length=50, unique=True)
     phone_number = models.CharField(max_length=15, unique=True)
     image = models.ImageField(upload_to='driver_images/', default='driver_images/default.jpg', blank=True, null=True)
+    availability = models.BooleanField(default=True)  # New field for availability
 
     def __str__(self):
-        return f"{self.user.username} - {self.license_number}"
+        return f"{self.user.username} - {self.license_number} ({'Available' if self.availability else 'Unavailable'})"
 
     @classmethod
     def create_driver(cls, username, password, license_number, phone_number, image=None):
@@ -46,9 +49,11 @@ class Driver(models.Model):
             user=user, 
             license_number=license_number, 
             phone_number=phone_number, 
-            image=image
+            image=image,
+            availability=True  # Default to available
         )
         return driver
+
     
 class Car(models.Model):
     BODY_TYPES = (
@@ -104,3 +109,4 @@ class Reservation(models.Model):
 
     def __str__(self):
         return f"Reservation {self.id} - {self.car} by {self.user.username} (${self.total_cost})"
+

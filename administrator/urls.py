@@ -11,4 +11,8 @@ urlpatterns = [
     path('drivers/', views.driver_list, name='driver_list'),
     path("add-driver/", views.add_driver, name="add_driver"),
     path('delete-driver/<int:driver_id>/', views.delete_driver, name='delete_driver'),
+    path('drivers/update/<int:driver_id>/', views.update_driver, name='update_driver'),
+    path('signup/', views.signup_view, name='signup'),
+    path("login/", views.login_view, name="login"),
+    path("logout/", views.logout_view, name="logout"),
 ]

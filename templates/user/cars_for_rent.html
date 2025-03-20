@@ -1,0 +1,155 @@
+{% extends "user/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+
+<style>
+    /* Custom Styling */
+    .car-list {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px !important;  /* Reduce font size */
+    }
+
+    .table th, .table td {
+        padding: 8px !important;  /* Reduce padding */
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+
+    .table th {
+        background-color: #007bff !important; /* Override table header */
+        color: white !important;
+        font-weight: bold !important;
+    }
+
+    .table td {
+        background-color: #f8f9fa !important;
+    }
+
+    .table .car-image {
+        width: 200px !important;
+        height: 120px !important;
+    }
+
+    .car-image .img {
+        width: 180px !important;
+        height: 100px !important;
+        background-size: cover !important;
+        background-position: center !important;
+        margin: auto !important;
+    }
+
+    .price h3 {
+        font-size: 16px !important;
+        margin-bottom: 5px !important;
+    }
+    .btn-custom a {
+        display: inline-block !important;
+        padding: 5px 10px !important;
+        font-size: 12px !important;
+        background-color: #007bff !important; /* Bootstrap primary blue */
+        color: white !important;
+        text-decoration: none !important;
+        transition: background-color 0.3s ease-in-out !important;
+        border-radius: 0px !important; /* Removes rounded edges */
+    }
+    
+    .btn-custom a:hover {
+        background-color: #0056b3 !important; /* Darker blue on hover */
+    }
+    
+    
+
+    /* Pagination Styles */
+    .pagination {
+        margin-top: 10px !important;
+    }
+
+    .pagination .page-item .page-link {
+        font-size: 12px !important;
+        padding: 5px 10px !important;
+    }
+</style>
+
+
+<section class="ftco-section ftco-cart mt-3" id="cars_section">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12 ftco-animate">
+                <div class="car-list">
+                    <table class="table table-hover">
+                        <thead class="thead-primary">
+                            <tr class="text-center">
+                                <th>Car</th>
+                                <th class="bg-secondary heading">Model & Brand</th>
+                                <th class="bg-primary heading">Per Hour Rate (PHP)</th>
+                                <th class="bg-dark heading">Per Day Rate (PHP)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for car in cars %}
+                            <tr>
+                                <td class="car-image product-name text-center">
+                                    <div class="img" style="background-image: url(
+                                        {% if car.image %}{{ car.image.url }}{% else %}{% static 'user_side/images/default_car.jpg' %}{% endif %}
+                                    );"></div>
+                                </td>
+                                <td class="text-center">
+                                    <h5 style="font-size: 1rem; font-weight: 600;">{{ car.brand }} {{ car.model }} ({{ car.year }})</h5>
+                                    <p class="text-muted">{{ car.body_type|title }}</p>
+                                </td>
+                                <td class="price text-center">
+                                    <p class="btn-custom"><a href="{% url 'car_detail' car.plate_number %}">View Details</a></p>
+                                    <div class="price-rate">
+                                        <h5 style="font-size: 1rem;"><span class="num">₱{{ car.price_per_hour|floatformat:2|intcomma }}</span> <span class="per">/ per hour</span></h5>
+                                    </div>
+                                </td>
+                                <td class="price text-center">
+                                    <p class="btn-custom"><a href="{% url 'car_detail' car.plate_number %}">View Details</a></p>
+                                    <div class="price-rate">
+                                        <h5 style="font-size: 1rem;"><span class="num">₱{{ car.price_per_day|floatformat:2|intcomma }}</span> <span class="per">/ per day</span></h5>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No cars available for rent at the moment.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    
+                    <!-- Pagination -->
+                    <div class="pagination mt-4">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center">
+                                {% if cars.has_previous %}
+                                    <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
+                                    <li class="page-item"><a class="page-link" href="?page={{ cars.previous_page_number }}">Previous</a></li>
+                                {% endif %}
+
+                                <li class="page-item active"><span class="page-link">Page {{ cars.number }} of {{ cars.paginator.num_pages }}</span></li>
+
+                                {% if cars.has_next %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ cars.next_page_number }}">Next</a></li>
+                                    <li class="page-item"><a class="page-link" href="?page={{ cars.paginator.num_pages }}">Last</a></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    <!-- End Pagination -->
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock content %}

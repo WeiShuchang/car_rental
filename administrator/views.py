@@ -1,15 +1,25 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from .models import Car, Driver
-from .forms import CarForm, DriverForm
+from .forms import CarForm, DriverForm, SignUpForm
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.contrib import messages
-from .models import UserProfile
 from django.contrib.auth.models import User
+from django.contrib.auth import login, authenticate, logout
+from django.shortcuts import render, redirect
+from .models import UserProfile
 
 def admin_dashboard(request):
-    return render(request, "administrator/admin_dashboard.html")
+    driver_count = Driver.objects.count()
+    car_count = Car.objects.count()
+    
+    context = {
+        'driver_count': driver_count,
+        'car_count': car_count,
+    }
+    
+    return render(request, "administrator/admin_dashboard.html", context)
 
 def car_list(request):
     cars_list = Car.objects.all().order_by('-id')
@@ -21,7 +31,6 @@ def car_list(request):
         'cars': cars,
     }
     return render(request, 'administrator/car_list.html', context)
-
 def add_car(request):
     cars = Car.objects.all()  # Fetch the list of cars
 
@@ -47,15 +56,12 @@ def add_car(request):
         form = CarForm()
 
     return render(request, 'administrator/car_list.html', {'form': form, 'cars': cars})
-
-
 @csrf_protect
 def delete_car(request, car_id):
     car = get_object_or_404(Car, id=car_id)
     car.delete()
     messages.success(request, "Car deleted successfully.")
     return redirect("car_list")  # Change this to your actual view name
-
 def edit_car(request, car_id):
     car = get_object_or_404(Car, id=car_id)
     
@@ -85,7 +91,6 @@ def edit_car(request, car_id):
                     messages.error(request, f"{field}: {error}")
     
     return redirect("car_list")  # Redirect back to the car list page
-
 def driver_list(request):
     drivers = Driver.objects.all()  # Fetch all drivers
     paginator = Paginator(drivers, 10)  # Show 10 drivers per page
@@ -97,7 +102,6 @@ def driver_list(request):
         "drivers": page_obj,  # Pass paginated drivers
         "page_obj": page_obj,  # Include page_obj for pagination controls
     })
-
 def add_driver(request):
     drivers = Driver.objects.all()  # Fetch all drivers
 
@@ -160,9 +164,92 @@ def add_driver(request):
         })
 
     return redirect("driver_list")
-
 def delete_driver(request, driver_id):
     driver = get_object_or_404(Driver, id=driver_id)
     driver.delete()
     messages.success(request, 'Driver deleted successfully.')
     return redirect('driver_list')  
+def update_driver(request, driver_id):
+    driver = get_object_or_404(Driver, id=driver_id)
+
+    if request.method == "POST":
+        username = request.POST.get("username")
+        first_name = request.POST.get("first_name")
+        last_name = request.POST.get("last_name")
+        email = request.POST.get("email")
+        license_number = request.POST.get("license_number")
+        phone_number = request.POST.get("phone_number")
+
+        # Convert "true"/"false" string to boolean
+        availability = request.POST.get("availability") == "true"
+
+        # Update fields
+        driver.user.username = username
+        driver.user.first_name = first_name
+        driver.user.last_name = last_name
+        driver.user.email = email
+        driver.license_number = license_number
+        driver.phone_number = phone_number
+        driver.availability = availability  # Update availability field
+
+        if "driver_image" in request.FILES:
+            driver.image = request.FILES["driver_image"]
+
+        try:
+            driver.user.save()
+            driver.save()
+            messages.success(request, "Driver details updated successfully!")
+        except Exception as e:
+            messages.error(request, f"Error updating driver: {e}")
+
+        return redirect("driver_list")
+
+    return render(request, "administrator/driver_list.html", {"driver": driver})
+
+
+def signup_view(request):
+    if request.method == "POST":
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)  # Log in the user after signing up
+            messages.success(request, "Signup successful! Welcome to your dashboard.")
+            return redirect('user_dashboard')  # Redirect to user dashboard
+        else:
+            messages.error(request, "Signup failed. Please check the form for errors.")
+    else:
+        form = SignUpForm()
+    
+    return render(request, 'authentication/signup_page.html', {'form': form})
+def login_view(request):
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            messages.success(request, "You have successfully logged in.")
+            
+            # Get the user profile and check the role
+            try:
+                user_profile = UserProfile.objects.get(user=user)
+                if user_profile.role == "admin":
+                    return redirect("admin_dashboard")
+                elif user_profile.role == "user":
+                    return redirect("user_dashboard")
+                elif user_profile.role == "driver":
+                    return redirect("driver_dashboard")  # If you have a separate driver dashboard
+            except UserProfile.DoesNotExist:
+                messages.error(request, "User profile not found.")
+                return redirect("login")  # Redirect back to login if no profile found
+
+        else:
+            messages.error(request, "Invalid username or password. Please try again.")
+
+    return render(request, "authentication/login_page.html")
+
+def logout_view(request):
+    logout(request)
+    messages.success(request, "You have been logged out.")
+    return redirect("login")  # Redirect to the login page

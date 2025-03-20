@@ -30,6 +30,15 @@
     .pagination .page-item {
         margin: 0 5px;
     }
+    /* Target the table and make the text smaller */
+    .table td, .table th {
+        font-size: 0.75rem; /* Adjust the font size */
+    }
+
+    /* Optional: Reduce padding for a tighter layout */
+    .table td, .table th {
+        padding: 0.3rem;  /* Adjust padding */
+    }
 </style>
 
 <div class="page-wrapper">
@@ -87,67 +96,73 @@
                                     <th>License Number</th>
                                     <th>Phone Number</th>
                                     <th>Date Joined</th>
-                                    <th>Edit</th>
-                                    <th>Delete</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% if drivers %}
                                     {% for driver in drivers %}
                                     <tr> 
-                                        <td>
-                                            {% if driver.image %}
-                                                <img src="{{ driver.image.url }}" alt="Driver Image" class="rounded-circle" width="50" height="50">
-                                            {% else %}
-                                                <span class="text-muted">No Image</span>
-                                            {% endif %}
+                                        <td class="position-relative">
+                                            <div class="position-relative d-inline-block">
+                                                {% if driver.image %}
+                                                    <img src="{{ driver.image.url }}" alt="Driver Image" class="rounded-circle" width="50" height="50">
+                                                {% else %}
+                                                    <span class="text-muted">No Image</span>
+                                                {% endif %}
+                                                {% if driver.availability %}
+                                                    <span class="badge bg-success position-absolute bottom-0 end-0 translate-middle p-1 rounded-circle"></span>
+                                                {% else %}
+                                                    <span class="badge bg-danger position-absolute bottom-0 end-0 translate-middle p-1 rounded-circle"></span>
+                                                {% endif %}
+                                            </div>
                                         </td>
                                         <td>{{ driver.user.username }}</td>
                                         <td>{{ driver.user.first_name }} {{ driver.user.last_name }}</td>
                                         <td>{{ driver.user.email }}</td>
                                         <td>{{ driver.license_number }}</td>
                                         <td>{{ driver.phone_number }}</td>
-                                 
                                         <td>{{ driver.user.date_joined|date:"F j, Y" }}</td>
                                         <td>
-                                            <button class="btn btn-sm btn-primary edit-driver-btn" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#modal-edit-driver"
-                                                    data-id="{{ driver.id }}"
-                                                    data-username="{{ driver.user.username }}"
-                                                    data-license-number="{{ driver.license_number }}"
-                                                    data-phone-number="{{ driver.phone_number }}"
-                                                    data-email="{{ driver.user.email }}"
-                                                    data-fullname="{{ driver.user.first_name }} {{ driver.user.last_name }}"
-                                                    data-address="{{ driver.address }}"
-                                                    data-image-url="{% if driver.image %}{{ driver.image.url }}{% else %}{% endif %}">
-                        
+                                            <div class="d-flex gap-1">
+                                                <button class="btn btn-sm btn-primary edit-driver-btn" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#modal-edit-driver"
+                                                        data-driver-id="{{ driver.id }}"
+                                                        data-username="{{ driver.user.username }}"  
+                                                        data-first-name="{{ driver.user.first_name }}"
+                                                        data-last-name="{{ driver.user.last_name }}"
+                                                        data-email="{{ driver.user.email }}"
+                                                        data-license-number="{{ driver.license_number }}"
+                                                        data-phone-number="{{ driver.phone_number }}"
+                                                        data-image-url="{% if driver.image %}{{ driver.image.url }}{% else %}{% endif %}"
+                                                        data-availability="{{ driver.availability|yesno:'true,false' }}" >
+                                                     
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
                                                         <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
                                                         <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
                                                     </svg>
-                                            </button>
-                                        </td>
-                                        <td>  
-                                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modal-delete" 
-                                                data-delete-url="{% url 'delete_driver' driver.id %}" 
-                                                data-driver-name="{{ driver.user.first_name }} {{ driver.user.last_name }}">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
-                                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
-                                                </svg>
-                                            </button>
-
+                                                </button>
+                                                                                            
+                                                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modal-delete" 
+                                                    data-delete-url="{% url 'delete_driver' driver.id %}" 
+                                                    data-driver-name="{{ driver.user.first_name }} {{ driver.user.last_name }}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}
                                 {% else %}
                                     <tr>
-                                        <td colspan="10" class="text-center text-muted">No drivers available</td>
+                                        <td colspan="8" class="text-center text-muted">No drivers available</td>
                                     </tr>
                                 {% endif %}
                             </tbody>
-                        </table>                       
+                        </table>                                         
                     </div>
                 </div>
             </div>
@@ -177,7 +192,69 @@
         </ul>
     </nav>
 </div>
-
+<!-- Edit Driver Modal -->
+<div class="modal fade" id="modal-edit-driver" tabindex="-1" aria-labelledby="editDriverLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editDriverLabel">Edit Driver</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editDriverForm" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" id="driverId" name="driver_id">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="first_name" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="license_number" class="form-label">License Number</label>
+                            <input type="text" class="form-control" id="license_number" name="license_number" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone_number" class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" id="phone_number" name="phone_number" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="availability" class="form-label">Availability</label>
+                            <select class="form-select" id="availability" name="availability" required>
+                                <option value="true">Available</option>
+                                <option value="false">Unavailable</option>
+                            </select>
+                        </div>
+                        
+                        
+                        <div class="col-md-6">
+                            <label for="driver_image" class="form-label">Driver Image</label>
+                            <input type="file" class="form-control" id="driver_image" name="driver_image">
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <img id="current-driver-image" src="" alt="Driver Image" class="img-thumbnail" width="100" style="display: none;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <!-- Add New Driver Modal -->
 <div class="modal fade" id="modal-driver" tabindex="-1" aria-labelledby="modal-driver-label" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -258,8 +335,6 @@
         </div>
     </div>
 </div>
-
-
 <!-- Delete Confirmation Modal -->
 <div class="modal modal-blur fade" id="modal-delete" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
@@ -340,6 +415,49 @@
         }
     });
 </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.edit-driver-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const driverId = this.getAttribute('data-driver-id');
+                const username = this.getAttribute('data-username');
+                const firstName = this.getAttribute('data-first-name');
+                const lastName = this.getAttribute('data-last-name');
+                const email = this.getAttribute('data-email');
+                const licenseNumber = this.getAttribute('data-license-number');
+                const phoneNumber = this.getAttribute('data-phone-number');
+                const availability = this.getAttribute('data-availability');  // Get availability as "true"/"false"
+                const imageUrl = this.getAttribute('data-image-url');
+    
+                document.getElementById('username').value = username;
+                document.getElementById('first_name').value = firstName;
+                document.getElementById('last_name').value = lastName;
+                document.getElementById('email').value = email;
+                document.getElementById('license_number').value = licenseNumber;
+                document.getElementById('phone_number').value = phoneNumber;
+    
+                // Set the availability dropdown
+                const availabilitySelect = document.getElementById('availability');
+                if (availabilitySelect) {
+                    availabilitySelect.value = availability === "true" ? "true" : "false";
+                }
+    
+                const form = document.querySelector('#modal-edit-driver form');
+                form.setAttribute('action', `/administrator/drivers/update/${driverId}/`);
+    
+                const imagePreview = document.getElementById('current-driver-image');
+                if (imageUrl) {
+                    imagePreview.src = imageUrl;
+                    imagePreview.style.display = 'block';
+                } else {
+                    imagePreview.style.display = 'none';
+                }
+            });
+        });
+    });
+    
+</script>
+
 {% endblock content %}
 
 
