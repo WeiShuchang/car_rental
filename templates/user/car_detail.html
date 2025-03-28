@@ -10,6 +10,10 @@
         border-radius: 10px;
         box-shadow: none;
     }
+    .date-input {
+        height: 30px; /* Decrease height */
+        font-size: 14px;
+    }
     
     .car-detail-box .row {
         align-items: center; /* Aligns the image and text vertically */
@@ -36,9 +40,130 @@
         margin-top: 10px; /* Smaller margin above the button */
     }
     
+
+    /* Dark overlay when modal is active */
+    .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    /* Modal container */
+    .modal-content {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Modal header */
+    .modal-header {
+        background-color: #000000; /* Black background */
+        text-align:center;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        padding: 10px 20px;
+    }
+    
+    .modal-title {
+        font-size: 15px;
+        font-weight: bold;
+     
+        letter-spacing: 1px; /* Optional: adds a sleek touch */
+        color: white; /* White text */
+    }
+    
+    /* Close button */
+    .btn-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+    }
+
+    .btn-close:hover {
+        opacity: 0.8;
+    }
+
+    /* Modal body styling */
+    .modal-body {
+        padding: 20px;
+        font-size: 16px;
+        color: #333;
+    }
+
+    .modal-body p {
+        margin-bottom: 10px;
+    }
+
+    /* Input fields */
+    .form-label {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .form-control, .form-select {
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 15px;
+        border: 1px solid #ccc;
+        transition: all 0.3s ease-in-out;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    }
+
+    /* Modal footer */
+    .modal-footer {
+        background-color: #f8f9fa !important;
+        border-bottom-left-radius: 12px !important;
+        border-bottom-right-radius: 12px !important;
+        padding: 15px 20px !important;
+        display: flex !important;
+        justify-content: space-between !important; /* Ensures even spacing */
+        align-items: center !important;
+    }
+    
+    /* General button styling */
+    .modal-footer .btn {
+        min-width: 120px !important; /* Ensures buttons have consistent width */
+        padding: 10px 15px !important;
+        font-weight: bold !important;
+        text-transform: uppercase !important; /* Gives a sleek, modern look */
+        border-radius: 6px !important;
+        font-size: 15px !important;
+    }
+    
+    /* Secondary button */
+    .modal-footer .btn-secondary {
+        background-color: #6c757d !important; /* Bootstrap default secondary color */
+        color: white !important;
+        border: none !important;
+    }
+    
+    .modal-footer .btn-secondary:hover {
+        background-color: #5a6268 !important; /* Slightly darker on hover */
+    }
+    
+    /* Primary button */
+    .modal-footer .btn-primary {
+        background-color: #000000 !important; /* Black background for a modern, minimalistic look */
+        color: white !important;
+        border: none !important;
+    }
+    
+    .modal-footer .btn-primary:hover {
+        background-color: #333333 !important; /* Dark grey on hover */
+    }
+    
+    .date-input {
+        height: 30px; /* Decrease height */
+        font-size: 14px;
+    }
 </style>
 
-<section class="ftco-section">
+
+<section class="ftco-section mt-4">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-10">
@@ -49,11 +174,11 @@
                         </div>
                         <div class="col-md-6">
                             <h3 class="mb-3">{{ car.brand }} {{ car.model }} ({{ car.year }})</h3>
-                            <p class="text-muted"><strong>Body Type:</strong> {{ car.get_body_type_display }}</p>
-                            <p class="text-muted"><strong>Plate Number:</strong> {{ car.plate_number }}</p>
-                            <h4 class="text-primary">₱{{ car.price_per_hour|floatformat:2|intcomma }} / hour</h4>
-                            <h4 class="text-dark">₱{{ car.price_per_day|floatformat:2|intcomma }} / day</h4>
-                            <a href="#" class="btn btn-primary mt-3">Rent This Car</a>
+                            <p class="text-dark"><strong>Body Type:</strong> {{ car.get_body_type_display }}</p>
+                            <p class="text-dark"><strong>Plate Number:</strong> {{ car.plate_number }}</p>
+
+                            <h4 class="text-primary">₱{{ car.price_per_day|floatformat:2|intcomma }} / day</h4>
+                            <a href="#" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#rentModal">Rent This Car</a>
                         </div>
                     </div>
                 </div>
@@ -61,4 +186,135 @@
         </div>
     </div>
 </section>
+
+<div class="modal fade" id="rentModal" tabindex="-1" aria-labelledby="rentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg"> <!-- Make modal wider -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rentModalLabel">Confirm Rental</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+                    </svg>
+                </button>
+            </div>
+            <form method="POST" action="{% url 'rent_car' car.plate_number %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="small"><strong>Car:</strong> {{ car.brand }} {{ car.model }} ({{ car.year }})</p>
+                            <p class="small"><strong>Plate Number:</strong> {{ car.plate_number }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="small"><strong>Price per Day:</strong> ₱{{ car.price_per_day|floatformat:2|intcomma }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Start and End Date (Two-Column Layout) -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="start_date" class="form-label small">Start Date & Time</label>
+                            <input type="datetime-local" class="form-control form-control-sm date-input" name="start_date" id="start_date" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="end_date" class="form-label small">End Date & Time</label>
+                            <input type="datetime-local" class="form-control form-control-sm date-input" name="end_date" id="end_date" required>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="mb-3 mt-1">
+                        <label for="payment_method" class="form-label small">Payment Method</label>
+                        <select class="form-select form-select-sm" name="payment_method" required>
+                            <option value="onsite">Onsite</option>
+                            <option value="gcash" disabled>GCash</option>
+                        </select>
+                    </div>
+
+                    <!-- Rental Summary -->
+                    <div class="alert alert-info small" id="rental_summary">
+                        <strong>Rental Summary:</strong>
+                        <p>Rental Duration: <span id="rental_days">0</span> day(s)</p>
+                        <p>Total Cost: <strong>₱<span id="total_cost">0.00</span></strong></p>
+                        <p><em>For a <span id="rental_days_text">0-day</span> rental, you will be charged ₱<span id="total_cost_text">0.00</span>.</em></p>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Confirm Rental</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const startDateInput = document.getElementById("start_date");
+        const endDateInput = document.getElementById("end_date");
+        const rentalDaysText = document.getElementById("rental_days");
+        const totalCostText = document.getElementById("total_cost");
+        const rentalDaysHumanized = document.getElementById("rental_days_text");
+        const totalCostHumanized = document.getElementById("total_cost_text");
+    
+        function updateRentalSummary() {
+            const pricePerDay = parseFloat("{{ car.price_per_day }}");
+            const startDate = new Date(startDateInput.value);
+            const endDate = new Date(endDateInput.value);
+            
+            if (!isNaN(startDate) && !isNaN(endDate) && endDate >= startDate) {
+                const startDay = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+                const endDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+                const diffTime = endDay - startDay;
+                let days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                // Ensure at least 1 day rental even if start and end are the same day
+                if (days === 0) {
+                    days = 1;
+                }
+                
+                const totalCost = days * pricePerDay;
+    
+                rentalDaysText.textContent = days;
+                totalCostText.textContent = totalCost.toLocaleString("en-PH", { minimumFractionDigits: 2 });
+                rentalDaysHumanized.textContent = `${days}-day`;
+                totalCostHumanized.textContent = totalCost.toLocaleString("en-PH", { minimumFractionDigits: 2 });
+            } else {
+                rentalDaysText.textContent = "0";
+                totalCostText.textContent = "0.00";
+                rentalDaysHumanized.textContent = "0-day";
+                totalCostHumanized.textContent = "0.00";
+            }
+        }
+    
+        startDateInput.addEventListener("change", updateRentalSummary);
+        endDateInput.addEventListener("change", updateRentalSummary);
+    });
+    
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let startDateInput = document.getElementById("start_date");
+        let endDateInput = document.getElementById("end_date");
+
+        function setMinDate() {
+            let now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Adjust for timezone
+            let minDateTime = now.toISOString().slice(0, 16); // Format as YYYY-MM-DDTHH:MM
+
+            startDateInput.min = minDateTime;
+            endDateInput.min = minDateTime;
+        }
+
+        setMinDate(); // Set minimum date on page load
+
+        startDateInput.addEventListener("change", function () {
+            endDateInput.min = startDateInput.value; // Ensure end date is after start date
+        });
+    });
+</script>
+
+
 {% endblock %}

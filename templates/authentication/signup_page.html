@@ -105,21 +105,14 @@
           </div>
       
           <div class="row">
-              <div class="col-md-6 form-group">
-                  <input type="text" name="contact_number" class="form-control" placeholder="Contact Number" value="{{ form.contact_number.value|default_if_none:'' }}" required>
-                  {% if form.contact_number.errors %}
-                      <small class="text-danger">{{ form.contact_number.errors.0 }}</small>
-                  {% endif %}
-              </div>
+          
               <div class="col-md-6 form-group">
                   <input type="password" name="password1" class="form-control" placeholder="Password" required>
                   {% if form.password1.errors %}
                       <small class="text-danger">{{ form.password1.errors.0 }}</small>
                   {% endif %}
               </div>
-          </div>
-      
-          <div class="row">
+        
               <div class="col-md-6 form-group">
                   <input type="password" name="password2" class="form-control" placeholder="Confirm Password" required>
                   {% if form.password2.errors %}

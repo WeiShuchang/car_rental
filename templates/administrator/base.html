@@ -63,9 +63,10 @@
                     Reservations
                 </a>
                 <ul class="dropdown-menu" aria-labelledby="databaseDropdown">
-                    <li><a class="dropdown-item" href="">Pending</a></li>
-                    <li><a class="dropdown-item" href="">Confirmed</a></li>
-                    <li><a class="dropdown-item" href="">Cancelled</a></li>
+                    <li><a class="dropdown-item" href="{% url "pending_reservations" %}">Pending</a></li>
+                    <li><a class="dropdown-item" href="{% url 'approved_reservations' %}">Approved</a></li>
+                    <li><a class="dropdown-item" href="{% url "cancelled_reservations" %}">Cancelled</a></li>
+                    <li><a class="dropdown-item" href="{% url "completed_reservations" %}">Completed</a></li>
                 </ul>
               </li>
             

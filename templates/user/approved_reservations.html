@@ -1,0 +1,212 @@
+{% extends 'user/base.html' %}
+{% load humanize %}
+
+{% block content %}
+<style>
+    .receipt-modal .modal-dialog {
+        max-width: 350px;
+    }
+    .receipt-modal .modal-content {
+        border-radius: 10px;
+        border: 2px dashed #ccc;
+        padding: 15px;
+        font-family: 'Courier New', monospace;
+    }
+    .receipt-header {
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    .receipt-body {
+        font-size: 14px;
+        line-height: 1.4;
+    }
+    .receipt-body .row {
+        display: flex;
+        justify-content: space-between;
+    }
+    .receipt-footer {
+        text-align: center;
+        font-weight: bold;
+        margin-top: 10px;
+        font-size: 16px;
+    }
+    .receipt-body span {
+        font-weight: bold;
+        color: #000;
+    }
+</style>
+<section class="ftco-section mt-3">
+    <div class="container">
+        <h2 class="mb-4 text-center">Approved Reservations</h2>
+        
+        {% for message in messages %}
+            <div class="alert 
+                {% if message.tags == 'success' %}alert-success
+                {% elif message.tags == 'error' %}alert-danger
+                {% elif message.tags == 'warning' %}alert-warning
+                {% endif %} 
+                alert-dismissible fade show" role="alert" id="alert-message">
+                {{ message|linebreaksbr }}
+            </div>
+        {% endfor %}
+
+        {% if reservations %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="thead-dark">
+                        <tr class="text-center">
+                            <th>Car</th>
+                            <th>Assigned Driver</th>
+                            <th>Rental Period</th>
+                            <th>Total Cost (PHP)</th>
+                            <th>Payment Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reservation in reservations %}
+                        <tr class="text-center">
+                            <!-- Car Details -->
+                            <td>
+                                <img src="{{ reservation.car.image.url }}" alt="{{ reservation.car.brand }} {{ reservation.car.model }}" 
+                                     class="img-fluid rounded" style="width: 80px; height: 50px; object-fit: cover;">
+                                <br>
+                                {{ reservation.car.brand }} {{ reservation.car.model }} <br>
+                                ({{ reservation.car.plate_number}})
+                            </td>
+                            <!-- Assigned Driver -->
+                            <td>
+                            {% if reservation.driver %}
+                                <img src="{{ reservation.driver.image.url }}" 
+                                        alt="{{ reservation.driver.name }}" 
+                                        class="img-fluid rounded-circle" 
+                                        style="width: 50px; height: 50px; object-fit: cover;">
+                                <br>
+                                {{ reservation.driver.user.first_name }} {{ reservation.driver.user.last_name }} <br>
+                                <p class="text-dark">{{ reservation.driver.phone_number }}</p>
+                            {% else %}
+                                <span class="text-muted">No driver assigned</span>
+                            {% endif %}
+                            </td>
+
+                            <!-- Rental Period -->
+                            <td>
+                                {{ reservation.start_date|date:"F d, Y" }} <br> 
+                                - {{ reservation.end_date|date:"F d, Y" }}
+                            </td>
+
+                            <!-- Total Cost -->
+                            <td>₱{{ reservation.total_cost|floatformat:2|intcomma }}</td>
+
+                            <!-- Payment Status -->
+                            <td>
+                                {% if reservation.payment_status == "paid" %}
+                                    <span class="text-muted">Paid</span>
+                                {% else %}
+                                    <span class="text-muted">Not Paid Yet</span>
+                                {% endif %}
+                            </td>
+
+                         
+
+                            <!-- View Button -->
+                            <td>
+                                <button class="btn btn-primary btn-sm view-reservation"
+                                    data-toggle="modal"
+                                    data-target="#receiptModal"
+                                    data-plate="{{ reservation.car.plate_number }}"
+                                    data-make="{{ reservation.car.brand }}"
+                                    data-model="{{ reservation.car.model }}"
+                                    data-start="{{ reservation.start_date|date:'F d, Y' }}"
+                                    data-end="{{ reservation.end_date|date:'F d, Y' }}"
+                                    data-status="{% if reservation.payment_status == 'paid' %}Paid{% else %}Not Paid Yet{% endif %}"
+                                    data-cost="₱{{ reservation.total_cost|floatformat:2|intcomma }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
+                                        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+                                        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-center">You have no approved reservations.</p>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Receipt Modal -->
+<div class="modal fade receipt-modal" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="receiptModalLabel">Reservation Receipt</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body receipt-body">
+                <div class="receipt-header">Car Rental Service</div>
+                <div class="row"><span>Plate No:</span> <span id="modal-plate"></span></div>
+                <div class="row"><span>Car:</span> <span id="modal-make-model"></span></div>
+                <div class="row"><span>Rental Period:</span> <span id="modal-rental-period"></span></div>
+                <div class="row"><span>Payment Method:</span> <span id="modal-method"></span></div>
+                <div class="row"><span>Payment Status:</span> <span id="modal-status"></span></div>
+                <div class="receipt-footer">Total: <span id="modal-cost"></span></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Handle view reservation button clicks
+        document.querySelectorAll(".view-reservation").forEach(button => {
+            button.addEventListener("click", function () {
+                // Update modal content with reservation data
+                document.getElementById("modal-plate").textContent = this.dataset.plate;
+                document.getElementById("modal-make-model").textContent = 
+                    this.dataset.make + " " + this.dataset.model;
+                document.getElementById("modal-rental-period").textContent = 
+                    this.dataset.start + " - " + this.dataset.end;
+                document.getElementById("modal-method").textContent = this.dataset.method;
+                document.getElementById("modal-status").textContent = this.dataset.status;
+                document.getElementById("modal-cost").textContent = this.dataset.cost;
+            });
+        });
+
+        // Properly handle modal closing
+        $('#receiptModal').on('hidden.bs.modal', function () {
+            // Remove any lingering backdrop
+            $('.modal-backdrop').remove();
+            // Ensure body is not in modal state
+            $('body').removeClass('modal-open');
+            // Reset inline styles that Bootstrap might add
+            $('body').css('padding-right', '');
+        });
+
+        // Also handle when clicking outside the modal
+        $('#receiptModal').on('click', function (e) {
+            if ($(e.target).hasClass('modal')) {
+                $('#receiptModal').modal('hide');
+            }
+        });
+
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function () {
+            document.querySelectorAll('.alert').forEach(function (alert) {
+                var alertInstance = new bootstrap.Alert(alert);
+                alertInstance.close();
+            });
+        }, 5000);
+    });
+</script>
+{% endblock %}

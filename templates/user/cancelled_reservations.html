@@ -1,0 +1,111 @@
+{% extends 'user/base.html' %}
+{% load humanize %}
+
+{% block content %}
+<style>
+    .receipt-modal .modal-dialog {
+        max-width: 350px;
+    }
+    .receipt-modal .modal-content {
+        border-radius: 10px;
+        border: 2px dashed #ccc;
+        padding: 15px;
+        font-family: 'Courier New', monospace;
+    }
+    .receipt-header {
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    .receipt-body {
+        font-size: 14px;
+        line-height: 1.4;
+    }
+    .receipt-body .row {
+        display: flex;
+        justify-content: space-between;
+    }
+    .receipt-footer {
+        text-align: center;
+        font-weight: bold;
+        margin-top: 10px;
+        font-size: 16px;
+    }
+    .receipt-modal .modal-content {
+        color: #333;
+        background-color: #fff;
+    }
+    .receipt-body span {
+        font-weight: bold;
+        color: #000;
+    }
+    .receipt-header {
+        color: #222;
+    }
+    .receipt-footer {
+        color: #111;
+    }
+</style>
+
+<section class="ftco-section mt-3">
+    <div class="container">
+        <h2 class="mb-4 text-center">Cancelled Reservations</h2>
+
+        {% for message in messages %}
+            <div class="alert 
+                {% if message.tags == 'success' %}alert-success
+                {% elif message.tags == 'error' %}alert-danger
+                {% elif message.tags == 'warning' %}alert-warning
+                {% endif %}
+                alert-dismissible fade show" role="alert" id="alert-message">
+                {{ message|linebreaksbr }}
+            </div>
+        {% endfor %}
+
+        {% if reservations %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="thead-dark">
+                        <tr class="text-center">
+                            <th>Car</th>
+                            <th>Rental Period</th>
+                            <th>Payment Method</th>
+                            <th>Total Cost (PHP)</th>
+                            <th>Cancelled by</th>
+                            <th>Cancellation Reason</th>
+                       
+                            
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reservation in reservations %}
+                        <tr class="text-center">
+                            <td>
+                                <img src="{{ reservation.car.image.url }}" alt="{{ reservation.car.brand }} {{ reservation.car.model }}" 
+                                     class="img-fluid rounded" style="width: 80px; height: 50px; object-fit: cover;">
+                                <br>
+                                {{ reservation.car.brand }} {{ reservation.car.model }} <br>
+                                ({{ reservation.car.plate_number}})
+                            </td>
+                            <td>
+                                {{ reservation.start_date|date:"F d, Y" }} <br> 
+                                - {{ reservation.end_date|date:"F d, Y" }}
+                            </td>
+                            <td>{{ reservation.get_payment_method_display }}</td>
+                            <td>₱{{ reservation.total_cost|floatformat:2|intcomma }}</td>
+                            <td>{{ reservation.cancelled_by}}</td>
+                            <td>{{ reservation.reason_for_cancelling }}</td>
+                            
+                         
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-center">You have no cancelled reservations.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

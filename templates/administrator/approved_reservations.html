@@ -1,0 +1,211 @@
+{% extends "administrator/base.html" %}
+{% load humanize %}
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header d-print-none mb-2">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <div class="page-pretitle">
+                        Ashley's Car Rental
+                    </div>
+                    <h2 class="page-title">
+                        Approved Reservations
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body container">
+        <div class="row g-2 container">
+            <div class="col-12">
+                {% for message in messages %}
+                <div class="alert 
+                    {% if message.tags == 'success' %}alert-success
+                    {% elif message.tags == 'error' %}alert-danger
+                    {% elif message.tags == 'warning' %}alert-warning
+                    {% endif %} 
+                    alert-dismissible fade show" role="alert">
+                    {{ message|linebreaksbr }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-sm card-table table-vcenter text-nowrap datatable">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Car</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Driver</th>
+                                    <th>Payment Method</th>
+                                    <th>Total Cost</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if reservations %}
+                                    {% for reservation in reservations %}
+                                    <tr>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-secondary  " 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#userProfileModal"
+                                                data-user-id="{{ reservation.user.id }}"
+                                                data-first-name="{{ reservation.user.first_name }}"
+                                                data-last-name="{{ reservation.user.last_name }}"
+                                                data-email="{{ reservation.user.email }}"
+                                                data-role="{{ reservation.user.userprofile.role|title }}"
+                                                data-contact="{{ reservation.user.userprofile.contact_number|default:'Not provided' }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person" viewBox="0 0 16 16">
+                                                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
+                                                </svg>
+                                            {{ reservation.user.first_name }} {{ reservation.user.last_name }}
+                                            </button>
+                                        </td>
+                            
+                                        <td>
+                                            <div>
+                                                {% if reservation.car.image %}
+                                                    <img src="{{ reservation.car.image.url }}" alt="{{ reservation.car }}" class="img-thumbnail" style="width: 80px; height: auto;">
+                                                {% else %}
+                                                    <img src="https://via.placeholder.com/80" alt="No Image" class="img-thumbnail">
+                                                {% endif %}
+                                            </div>
+                                            <div>{{ reservation.car.model }} ({{ reservation.car.year }})</div>
+                                        </td>
+                                        <td>
+                                            {{ reservation.start_date|date:"F j, Y" }}<br>
+                                            {{ reservation.start_date|date:"g:i a" }}
+                                        </td>
+                                        <td>
+                                            {{ reservation.end_date|date:"F j, Y" }}<br>
+                                            {{ reservation.end_date|date:"g:i a" }}
+                                        </td>
+                                        <td>{{ reservation.driver.user.get_full_name }}</td>
+                                        <td>{{ reservation.get_payment_method_display }}</td>
+                                        <td>₱{{ reservation.total_cost|floatformat:2|intcomma }}</td>
+                                        <td>
+                                            <button type="button" class="btn btn-success btn-sm" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#confirmCompleteModal" 
+                                                    data-reservation-id="{{ reservation.id }}">
+                                                Complete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted">No approved reservations</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><!-- Confirm Completion Modal -->
+<div class="modal modal-blur fade" id="confirmCompleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-success"></div>
+            <div class="modal-body text-center py-4">
+                <h3>Confirm Completion</h3>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-green icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l2 2l4 -4" /></svg>
+               
+                <p class="text-muted">Are you sure you want to mark this reservation as <strong class="text-success">completed</strong>?</p>
+                <p class="small">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <div class="row">
+                        <div class="col">
+                            <button type="button" class="btn w-100" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+                        </div>
+                        <div class="col">
+                            <form id="completeReservationForm" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success w-100">
+                                    Yes, Complete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+  <!-- User Profile Modal -->
+  <div class="modal fade" id="userProfileModal" tabindex="-1" aria-labelledby="userProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userProfileModalLabel">User Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Full Name:</div>
+                    <div class="col-md-8" id="modal-full-name"></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Email:</div>
+                    <div class="col-md-8" id="modal-email"></div>
+                </div>
+            
+            
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript to update form action -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var confirmModal = document.getElementById("confirmCompleteModal");
+        var form = document.getElementById("completeReservationForm");
+
+        confirmModal.addEventListener("show.bs.modal", function (event) {
+            var button = event.relatedTarget;  // Button that triggered the modal
+            var reservationId = button.getAttribute("data-reservation-id");  // Get reservation ID
+            
+            // Update form action dynamically
+            form.action = `/administrator/complete-reservation/${reservationId}/`;  // Ensure it matches your Django URL pattern
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var userProfileModal = document.getElementById('userProfileModal');
+        userProfileModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            
+            // Extract info from data-* attributes
+            var firstName = button.getAttribute('data-first-name');
+            var lastName = button.getAttribute('data-last-name');
+            var email = button.getAttribute('data-email');
+  
+            var contact = button.getAttribute('data-contact');
+            
+            // Update the modal's content
+            document.getElementById('modal-full-name').textContent = firstName + ' ' + lastName;
+            document.getElementById('modal-email').textContent = email;
+
+            document.getElementById('modal-contact').textContent = contact;
+        });
+    });
+</script>
+
+{% endblock %}

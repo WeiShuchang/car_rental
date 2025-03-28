@@ -5,7 +5,6 @@ from datetime import timedelta
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     ROLE_CHOICES = (
@@ -20,12 +19,10 @@ class UserProfile(models.Model):
         return self.user.username
 
 @receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
+def create_or_update_user_profile(sender, instance, created, **kwargs):
+    # This single signal handles both creation and updates
     if created:
-        UserProfile.objects.create(user=instance)
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
+        UserProfile.objects.get_or_create(user=instance)
     instance.userprofile.save()
 
 class Driver(models.Model):
@@ -53,8 +50,6 @@ class Driver(models.Model):
             availability=True  # Default to available
         )
         return driver
-
-    
 class Car(models.Model):
     BODY_TYPES = (
         ('sedan', 'Sedan'),
@@ -70,12 +65,12 @@ class Car(models.Model):
     plate_number = models.CharField(max_length=20, unique=True)
     body_type = models.CharField(max_length=10, choices=BODY_TYPES)
     available = models.BooleanField(default=True)
-    price_per_hour = models.DecimalField(max_digits=10, decimal_places=2, help_text="Price per hour in USD")
     price_per_day = models.DecimalField(max_digits=10, decimal_places=2, help_text="Price per day in USD")
     image = models.ImageField(upload_to='car_images/', null=True, blank=True)
+
     def __str__(self):
         return f"{self.brand} {self.model} ({self.plate_number})"
-
+    
 class Reservation(models.Model):
     STATUS_CHOICES = (
         ('pending', 'Pending'),
@@ -84,29 +79,36 @@ class Reservation(models.Model):
         ('completed', 'Completed'),
     )
 
+    PAYMENT_CHOICES = (
+        ('onsite', 'Onsite'),
+        ('gcash', 'GCash'),
+    )
+
+    PAYMENT_STATUS_CHOICES = (
+        ('not_paid', 'Not Paid Yet'),
+        ('paid', 'Paid'),
+    )
+
+    CANCELLED_BY_CHOICES = (
+        ('user', 'User'),
+        ('admin', 'Admin'),
+    )
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    car = models.ForeignKey(Car, on_delete=models.CASCADE)
-    driver = models.ForeignKey(Driver, on_delete=models.SET_NULL, null=True, blank=True)
+    car = models.ForeignKey('Car', on_delete=models.CASCADE)
+    driver = models.ForeignKey('Driver', on_delete=models.SET_NULL, null=True, blank=True)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
+    payment_method = models.CharField(max_length=10, choices=PAYMENT_CHOICES, default='onsite')
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     total_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default='not_paid')
 
-    def save(self, *args, **kwargs):
-        """ Calculate the total cost based on the reservation duration. """
-        if self.start_date and self.end_date:
-            duration = self.end_date - self.start_date
-            hours = duration.total_seconds() / 3600  # Convert seconds to hours
-            
-            # Charge per day if duration is at least 24 hours
-            if duration >= timedelta(days=1):
-                days = duration.days + (duration.seconds / 86400)  # Convert remaining seconds to fraction of a day
-                self.total_cost = round(days * self.car.price_per_day, 2)
-            else:
-                self.total_cost = round(hours * self.car.price_per_hour, 2)
-
-        super().save(*args, **kwargs)
+    # New fields
+    is_cancelled_notif = models.BooleanField(default=False)
+    is_approved_notif = models.BooleanField(default=False)
+    reason_for_cancelling = models.TextField(blank=True, null=True)
+    cancelled_by = models.CharField(max_length=10, choices=CANCELLED_BY_CHOICES, blank=True, null=True)
 
     def __str__(self):
-        return f"Reservation {self.id} - {self.car} by {self.user.username} (${self.total_cost})"
-
+        return f"Reservation {self.id} - {self.car} by {self.user.username} (₱{self.total_cost}) - {self.get_payment_status_display()}"

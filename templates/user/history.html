@@ -1,0 +1,117 @@
+{% extends 'user/base.html' %}
+{% load humanize %}
+
+{% block content %}
+<style>
+    .compact-table {
+        font-size: 0.85rem;
+    }
+    .compact-table th, .compact-table td {
+        padding: 0.4rem 0.5rem !important;
+    }
+    .status-pending {
+        color: #6c757d;
+        font-weight: 500;
+    }
+    .status-approved {
+        color: #0d6efd;
+        font-weight: 500;
+    }
+    .status-cancelled {
+        color: #dc3545;
+        font-weight: 500;
+    }
+    .status-completed {
+        color: #198754;
+        font-weight: 500;
+    }
+    .payment-paid {
+        color: #198754;
+        font-weight: 500;
+    }
+    .payment-not-paid {
+        color: #fd7e14;
+        font-weight: 500;
+    }
+    .table-responsive {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+</style>
+
+<section class="ftco-section mt-3">
+    <div class="container">
+        <h2 class="mb-4 text-center">Reservation History</h2>
+
+        {% for message in messages %}
+            <div class="alert 
+                {% if message.tags == 'success' %}alert-success
+                {% elif message.tags == 'error' %}alert-danger
+                {% elif message.tags == 'warning' %}alert-warning
+                {% endif %}
+                alert-dismissible fade show" role="alert" id="alert-message">
+                {{ message|linebreaksbr }}
+            </div>
+        {% endfor %}
+
+        {% if reservations %}
+            <div class="table-responsive">
+                <table class="table table-hover compact-table">
+                    <thead class="thead-dark">
+                        <tr class="text-center">
+                            <th>Status</th>
+                            <th>Car</th>
+                            <th>Rental Period</th>
+                            <th>Payment</th>
+                            <th>Amount</th>
+                            <th>Driver</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reservation in reservations %}
+                        <tr class="text-center">
+                            <td class="
+                                {% if reservation.status == 'completed' %}status-completed
+                                {% elif reservation.status == 'cancelled' %}status-cancelled
+                                {% elif reservation.status == 'approved' %}status-approved
+                                {% else %}status-pending
+                                {% endif %}">
+                                {{ reservation.get_status_display }}
+                            </td>
+                            <td>
+                                {{ reservation.car.brand }} {{ reservation.car.model }}<br>
+                               {{ reservation.car.plate_number }}
+                            </td>
+                            <td>
+                                {{ reservation.start_date|date:"M d, Y" }}<br>
+                                to {{ reservation.end_date|date:"M d, Y" }}
+                            </td>
+                           
+                            <td>
+                                {{ reservation.get_payment_method_display }}<br>
+                                <small class="
+                                    {% if reservation.payment_status == 'paid' %}payment-paid
+                                    {% else %}payment-not-paid
+                                    {% endif %}">
+                                    {{ reservation.get_payment_status_display }}
+                                </small>
+                            </td>
+                            <td>₱{{ reservation.total_cost|floatformat:2|intcomma }}</td>
+                            <td>
+                                {% if reservation.driver %}
+                                    {{ reservation.driver.user.first_name }} {{ reservation.driver.user.last_name }}
+                                {% else %}
+                                    <small>None</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-center">You have no reservation history.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

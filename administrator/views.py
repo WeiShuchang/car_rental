@@ -1,14 +1,18 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
-from .models import Car, Driver
+from .models import Car, Driver, Reservation
 from .forms import CarForm, DriverForm, SignUpForm
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.contrib import messages
+from django.urls import reverse
 from django.contrib.auth.models import User
-from django.contrib.auth import login, authenticate, logout
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+
 from django.shortcuts import render, redirect
-from .models import UserProfile
+
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 def admin_dashboard(request):
     driver_count = Driver.objects.count()
@@ -207,49 +211,119 @@ def update_driver(request, driver_id):
     return render(request, "administrator/driver_list.html", {"driver": driver})
 
 
-def signup_view(request):
-    if request.method == "POST":
-        form = SignUpForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)  # Log in the user after signing up
-            messages.success(request, "Signup successful! Welcome to your dashboard.")
-            return redirect('user_dashboard')  # Redirect to user dashboard
-        else:
-            messages.error(request, "Signup failed. Please check the form for errors.")
-    else:
-        form = SignUpForm()
-    
-    return render(request, 'authentication/signup_page.html', {'form': form})
-def login_view(request):
-    if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-        user = authenticate(request, username=username, password=password)
+def pending_reservations(request):
+    reservations = Reservation.objects.filter(status='pending').select_related('car', 'user')
+    drivers = Driver.objects.filter(availability=True).select_related('user')  # Get only available drivers
 
-        if user is not None:
-            login(request, user)
-            messages.success(request, "You have successfully logged in.")
+    return render(request, 'administrator/pending_reservations.html', {
+        'reservations': reservations,
+        'drivers': drivers
+    })
+
+def approve_reservation(request, reservation_id):
+    if request.method == "POST":
+        driver_id = request.POST.get("driver")
+
+        # Validate reservation
+        reservation = get_object_or_404(Reservation, id=reservation_id)
+
+        # Check if already approved
+        if reservation.status == "approved":
+            messages.warning(request, "This reservation has already been approved.")
+            return redirect("pending_reservations")
+
+        # Validate driver
+        if driver_id:
+            driver = Driver.objects.filter(id=driver_id, availability=True).first()
+            if not driver:
+                messages.error(request, "Invalid driver selection or driver is unavailable.")
+                return redirect("pending_reservations")
+
+            # Assign driver & update availability
+            reservation.driver = driver
+       
+            driver.save()
+
+        # Approve reservation
+        reservation.status = "approved"
+        reservation.save()
+
+        messages.success(request, "Reservation approved successfully!")
+        return redirect("pending_reservations")
+
+    messages.error(request, "Invalid request method.")
+    return redirect("pending_reservations")
+
+def cancel_reservation(request):
+    if request.method == "POST":
+        print("Form submitted!")  # Debugging
+        print("POST data:", request.POST)  # Debugging
+        
+        reservation_id = request.POST.get("reservation_id")
+        reason = request.POST.get("reason_for_cancelling")
+        cancelled_by = request.POST.get("cancelled_by")
+
+        try:
+            reservation = Reservation.objects.get(id=reservation_id)
+            print("Found reservation:", reservation)  # Debugging
             
-            # Get the user profile and check the role
-            try:
-                user_profile = UserProfile.objects.get(user=user)
-                if user_profile.role == "admin":
-                    return redirect("admin_dashboard")
-                elif user_profile.role == "user":
-                    return redirect("user_dashboard")
-                elif user_profile.role == "driver":
-                    return redirect("driver_dashboard")  # If you have a separate driver dashboard
-            except UserProfile.DoesNotExist:
-                messages.error(request, "User profile not found.")
-                return redirect("login")  # Redirect back to login if no profile found
+            if reservation.status == "pending":
+                reservation.status = "cancelled"
+                reservation.reason_for_cancelling = reason
+                reservation.cancelled_by = cancelled_by
+                reservation.is_cancelled_notif = True
+                reservation.save()
+                print("Reservation cancelled successfully")  # Debugging
+                messages.success(request, "Reservation has been cancelled successfully.")
+            else:
+                messages.error(request, "This reservation cannot be cancelled.")
+                
+        except Reservation.DoesNotExist:
+            messages.error(request, "Reservation not found.")
+        except Exception as e:
+            messages.error(request, f"An error occurred: {str(e)}")
+            print("Error:", str(e))  # Debugging
 
+    return redirect("pending_reservations")
+
+def approved_reservations(request):
+    reservations = Reservation.objects.filter(status='approved').select_related('user', 'car', 'driver').order_by("-id")
+    return render(request, 'administrator/approved_reservations.html', {'reservations': reservations})
+
+def cancelled_reservations(request):
+    reservations = Reservation.objects.filter(status='cancelled').select_related('user', 'car', 'driver').order_by("-id")
+    return render(request, 'administrator/cancelled_reservations.html', {'reservations': reservations})
+
+def complete_reservation(request, reservation_id):
+    reservation = get_object_or_404(Reservation, id=reservation_id)
+    
+    if request.method == "POST":
+        reservation.status = 'completed'
+        reservation.save()
+        messages.success(request, "Reservation marked as completed.")
+    
+    return redirect('approved_reservations')  # Adjust to your actual URL name
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def completed_reservations(request):
+    reservations = Reservation.objects.filter(status='completed').order_by('-end_date')
+    
+    context = {
+        'reservations': reservations,
+    }
+    return render(request, 'administrator/completed_reservations.html', context)
+def update_payment_status(request, reservation_id):
+    if request.method == 'POST':
+        reservation = get_object_or_404(Reservation, id=reservation_id)
+        new_status = request.POST.get('payment_status')
+        
+        # Validate the status
+        if new_status in dict(Reservation.PAYMENT_STATUS_CHOICES).keys():
+            reservation.payment_status = new_status
+            reservation.save()
+            messages.success(request, 'Payment status updated successfully!')
         else:
-            messages.error(request, "Invalid username or password. Please try again.")
-
-    return render(request, "authentication/login_page.html")
-
-def logout_view(request):
-    logout(request)
-    messages.success(request, "You have been logged out.")
-    return redirect("login")  # Redirect to the login page
+            messages.error(request, 'Invalid payment status selected.')
+            
+    return redirect('pending_reservations')  # Replace with your actual redirect target

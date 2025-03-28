@@ -24,7 +24,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('administrator/', include('administrator.urls')),
     path('user/', include('user.urls')),
-    path('', views.homepage, name="homepage")
+    path('', views.homepage, name="homepage"),
+    path('signup/', views.signup_view, name='signup'),
+    path("login/", views.login_view, name="login"),
+    path("logout/", views.logout_view, name="logout"),
 ]
 
 if settings.DEBUG:

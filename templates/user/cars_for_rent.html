@@ -76,11 +76,31 @@
         font-size: 12px !important;
         padding: 5px 10px !important;
     }
-</style>
 
+    /* Hide the button initially */
+    .btn-custom {
+        display: none;!important
+    }
+
+    /* Show the button when hovering over the row */
+    tr:hover .btn-custom {
+        display: block;!important
+    }
+</style>
 
 <section class="ftco-section ftco-cart mt-3" id="cars_section">
     <div class="container-fluid">
+
+        <div class="row mb-3">
+            <div class="col-md-12 text-center">
+                <h2>
+                    <i class="fas fa-car mr-2"></i>
+                    Cars for Rent
+                    <i class="fas fa-car ml-2"></i>
+                </h2>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-md-12 ftco-animate">
                 <div class="car-list">
@@ -88,43 +108,52 @@
                         <thead class="thead-primary">
                             <tr class="text-center">
                                 <th>Car</th>
-                                <th class="bg-secondary heading">Model & Brand</th>
-                                <th class="bg-primary heading">Per Hour Rate (PHP)</th>
+                                <th class="bg-secondary heading">Brand</th>
+                                <th class="bg-secondary heading">Model</th>
+                                <th class="bg-secondary heading">Year</th>
                                 <th class="bg-dark heading">Per Day Rate (PHP)</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for car in cars %}
                             <tr>
-                                <td class="car-image product-name text-center">
+                                <td class="car-image product-name text-center price">
+                                    <p class="btn-custom"><a href="{% url 'car_detail' car.plate_number %}">View Details</a></p>
                                     <div class="img" style="background-image: url(
                                         {% if car.image %}{{ car.image.url }}{% else %}{% static 'user_side/images/default_car.jpg' %}{% endif %}
                                     );"></div>
+
                                 </td>
-                                <td class="text-center">
-                                    <h5 style="font-size: 1rem; font-weight: 600;">{{ car.brand }} {{ car.model }} ({{ car.year }})</h5>
-                                    <p class="text-muted">{{ car.body_type|title }}</p>
+                                <td class="text-center price">
+                                    <p class="btn-custom"><a href="{% url 'car_detail' car.plate_number %}">View Details</a></p>
+                                    <h5 style="font-size: 1rem; font-weight: 600;">{{ car.brand }}</h5>
+                                </td>
+                                <td class="text-center price">
+                                    <p class="btn-custom"><a href="{% url 'car_detail' car.plate_number %}">View Details</a></p>
+                                    <h5 style="font-size: 1rem; font-weight: 600;">{{ car.model }}</h5>
+                                </td>
+                                <td class="text-center price">
+                                    <p class="btn-custom"><a href="{% url 'car_detail' car.plate_number %}">View Details</a></p>
+                                    <h5 style="font-size: 1rem; font-weight: 600;">{{ car.year }}</h5>
                                 </td>
                                 <td class="price text-center">
                                     <p class="btn-custom"><a href="{% url 'car_detail' car.plate_number %}">View Details</a></p>
                                     <div class="price-rate">
-                                        <h5 style="font-size: 1rem;"><span class="num">₱{{ car.price_per_hour|floatformat:2|intcomma }}</span> <span class="per">/ per hour</span></h5>
-                                    </div>
-                                </td>
-                                <td class="price text-center">
-                                    <p class="btn-custom"><a href="{% url 'car_detail' car.plate_number %}">View Details</a></p>
-                                    <div class="price-rate">
-                                        <h5 style="font-size: 1rem;"><span class="num">₱{{ car.price_per_day|floatformat:2|intcomma }}</span> <span class="per">/ per day</span></h5>
+                                        <h5 style="font-size: 1rem;">
+                                            <span class="num">₱{{ car.price_per_day|floatformat:2|intcomma }}</span> 
+                                            <span class="per">/ day</span>
+                                        </h5>
                                     </div>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center">No cars available for rent at the moment.</td>
+                                <td colspan="5" class="text-center">No cars available for rent at the moment.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
+                    
                     
                     <!-- Pagination -->
                     <div class="pagination mt-4">

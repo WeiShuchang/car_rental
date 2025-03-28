@@ -49,6 +49,7 @@
     }
     
 </style>
+
 <div class="page-wrapper">
     <div class="page-header d-print-none mb-2">
         <div class="container-xl">
@@ -104,7 +105,6 @@
                                     <th>Year</th>
                                     <th>Plate Number</th>
                                     <th>Body Type</th>
-                                    <th>Price Per Hour</th>
                                     <th>Price Per Day</th>
                                     <th>Actions</th>
                                 </tr>
@@ -134,7 +134,7 @@
                                         <td>{{ car.year }}</td>
                                         <td>{{ car.plate_number }}</td>
                                         <td>{{ car.get_body_type_display }}</td>
-                                        <td>₱{{ car.price_per_hour|intcomma }}</td>
+                                 
                                         <td>₱{{ car.price_per_day|intcomma }}</td>
                                         <td>
                                             <div class="d-flex gap-1">
@@ -148,7 +148,7 @@
                                                         data-plate-number="{{ car.plate_number }}"
                                                         data-body-type="{{ car.body_type }}"
                                                         data-available="{{ car.available|lower }}" 
-                                                        data-price-per-hour="{{ car.price_per_hour }}"
+                                            
                                                         data-price-per-day="{{ car.price_per_day }}"
                                                         data-image="{% if car.image %}{{ car.image.url }}{% endif %}">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
@@ -279,11 +279,7 @@
                             </select>
                             <div class="invalid-feedback">{{ form.body_type.errors|first }}</div>
                         </div>
-                        <div class="mb-3 col-md-6">
-                            <label for="price_per_hour" class="form-label">Price Per Hour</label>
-                            <input type="number" step="0.01" class="form-control {% if form.price_per_hour.errors %}is-invalid{% endif %}" id="price_per_hour" name="price_per_hour" value="{{ form.price_per_hour.value|default_if_none:'' }}" required>
-                            <div class="invalid-feedback">{{ form.price_per_hour.errors|first }}</div>
-                        </div>
+                    
                         <div class="mb-3 col-md-6">
                             <label for="price_per_day" class="form-label">Price Per Day</label>
                             <input type="number" step="0.01" class="form-control {% if form.price_per_day.errors %}is-invalid{% endif %}" id="price_per_day" name="price_per_day" value="{{ form.price_per_day.value|default_if_none:'' }}" required>
@@ -360,10 +356,7 @@
                                 <option value="false">Unavailable</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <label for="editPricePerHour" class="form-label">Price Per Hour</label>
-                            <input type="number" step="0.01" class="form-control" id="editPricePerHour" name="price_per_hour" required>
-                        </div>
+                    
                         <div class="col-md-6">
                             <label for="editPricePerDay" class="form-label">Price Per Day</label>
                             <input type="number" step="0.01" class="form-control" id="editPricePerDay" name="price_per_day" required>
@@ -431,7 +424,6 @@
             document.getElementById("editYear").value = button.getAttribute("data-year");
             document.getElementById("editPlateNumber").value = button.getAttribute("data-plate-number");
             document.getElementById("editBodyType").value = button.getAttribute("data-body-type");
-            document.getElementById("editPricePerHour").value = button.getAttribute("data-price-per-hour");
             document.getElementById("editPricePerDay").value = button.getAttribute("data-price-per-day");
 
             // Set availability dropdown

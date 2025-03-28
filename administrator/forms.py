@@ -52,7 +52,7 @@ class ReservationForm(forms.ModelForm):
 class SignUpForm(forms.ModelForm):
     first_name = forms.CharField(max_length=30, required=True)
     last_name = forms.CharField(max_length=30, required=True)
-    contact_number = forms.CharField(max_length=15, required=True)
+
     password1 = forms.CharField(widget=forms.PasswordInput, label="Password")
     password2 = forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
 
@@ -72,5 +72,12 @@ class SignUpForm(forms.ModelForm):
         user.set_password(self.cleaned_data['password1'])
         if commit:
             user.save()
-            UserProfile.objects.filter(user=user).update(contact_number=self.cleaned_data['contact_number'])
+            # This ensures we update contact_number whether creating or updating
+            UserProfile.objects.update_or_create(
+                user=user,
+                defaults={
+                
+                    'role': 'user'
+                }
+            )
         return user

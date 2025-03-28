@@ -1,0 +1,306 @@
+{% extends 'user/base.html' %}
+{% load humanize %}
+
+{% block content %}
+<style>
+    .receipt-modal .modal-dialog {
+        max-width: 350px;
+    }
+    .receipt-modal .modal-content {
+        border-radius: 10px;
+        border: 2px dashed #ccc;
+        padding: 15px;
+        font-family: 'Courier New', monospace;
+    }
+    .receipt-header {
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    .receipt-body {
+        font-size: 14px;
+        line-height: 1.4;
+    }
+    .receipt-body .row {
+        display: flex;
+        justify-content: space-between;
+    }
+    .receipt-footer {
+        text-align: center;
+        font-weight: bold;
+        margin-top: 10px;
+        font-size: 16px;
+    }
+   
+    .receipt-modal .modal-content {
+        color: #333; /* Dark gray for better readability */
+        background-color: #fff; /* Ensure good contrast */
+    }
+    
+    .receipt-body span {
+        font-weight: bold; /* Make labels stand out */
+        color: #000; /* Pure black for stronger contrast */
+    }
+    
+    .receipt-header {
+        color: #222; /* Slightly darker for emphasis */
+    }
+    
+    .receipt-footer {
+        color: #111; /* Darkest for the total cost */
+    }
+    
+    
+</style>
+<section class="ftco-section mt-3">
+    <div class="container">
+        <h2 class="mb-4 text-center">Pending Reservations</h2>
+        
+        {% for message in messages %}
+            <div class="alert 
+                {% if message.tags == 'success' %}alert-success
+                {% elif message.tags == 'error' %}alert-danger
+                {% elif message.tags == 'warning' %}alert-warning
+                {% endif %}
+                alert-dismissible fade show" role="alert" id="alert-message">
+                {{ message|linebreaksbr }}
+            </div>
+        {% endfor %}
+
+        {% if reservations %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="thead-dark">
+                        <tr class="text-center">
+                            <th>Car</th>
+                            <th>Rental Period</th>
+                            <th>Payment Method</th>
+                            <th>Total Cost (PHP)</th>
+                            <th>Payment Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reservation in reservations %}
+                        <tr class="text-center">
+                            <td>
+                                <img src="{{ reservation.car.image.url }}" alt="{{ reservation.car.brand }} {{ reservation.car.model }}" 
+                                     class="img-fluid rounded" style="width: 80px; height: 50px; object-fit: cover;">
+                                <br>
+                                {{ reservation.car.brand }} {{ reservation.car.model }} <br>
+                                ({{ reservation.car.plate_number}})
+                            </td>
+                            <td>
+                                {{ reservation.start_date|date:"F d, Y" }} <br> 
+                                - {{ reservation.end_date|date:"F d, Y" }}
+                            </td>
+
+                            <td>{{ reservation.get_payment_method_display }}</td>
+                            <td>₱{{ reservation.total_cost|floatformat:2|intcomma }}</td>
+                            <td>
+                                {% if reservation.payment_status == "paid" %}
+                                    <span class="text-muted">Paid</span>
+                                {% else %}
+                                    <span class="text-muted">Not Paid Yet</span>
+                                {% endif %}
+                            </td>
+                            
+                            
+                            <td>
+                                <div class="d-flex justify-content-center">
+                                    <button class="btn btn-primary btn-sm view-reservation mr-1"
+                                        data-toggle="modal"
+                                        data-target="#receiptModal"
+                                        data-image="{{ reservation.car.image.url }}"
+                                        data-plate="{{ reservation.car.plate_number }}"
+                                        data-make="{{ reservation.car.brand }}"
+                                        data-model="{{ reservation.car.model }}"
+                                        data-start="{{ reservation.start_date|date:'F d, Y' }}"
+                                        data-end="{{ reservation.end_date|date:'F d, Y' }}"
+                                        data-method="{{ reservation.get_payment_method_display }}"
+                                        data-status="{% if reservation.payment_status == 'paid' %}Paid{% else %}Not Paid Yet{% endif %}"
+                                        data-cost="₱{{ reservation.total_cost|floatformat:2|intcomma }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
+                                            <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+                                            <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                                        </svg>
+                                    </button>
+                                    
+                                    {% if reservation.status != 'cancelled' %}
+                                    <button class="btn btn-danger btn-sm cancel-reservation"
+                                        data-toggle="modal"
+                                        data-target="#cancelModal"
+                                        data-reservation-id="{{ reservation.id }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+                                        </svg>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-center">You have no pending reservations.</p>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Receipt Modal -->
+<div class="modal fade receipt-modal" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="receiptModalLabel">Reservation Receipt</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body receipt-body">
+                <div class="receipt-header">Car Rental Service</div>
+                <div class="row"><span>Plate No:</span> <span id="modal-plate"></span></div>
+                <div class="row"><span>Car:</span> <span id="modal-make-model"></span></div>
+                <div class="row"><span>Rental Period:</span> <span id="modal-rental-period"></span></div>
+                <div class="row"><span>Payment Method:</span> <span id="modal-method"></span></div>
+                <div class="row"><span>Payment Status:</span> <span id="modal-status"></span></div>
+                <div class="receipt-footer">Total: <span id="modal-cost"></span></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary btn-sm" id="closeModalBtn">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Cancel Reservation Confirmation Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title font-weight-bold" id="cancelModalLabel">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-exclamation-triangle-fill mr-2" viewBox="0 0 16 16">
+                        <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                    </svg>
+                    Confirm Reservation Cancellation
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="cancelForm" method="post" action="{% url 'user_cancel_reservation' %}">
+                {% csrf_token %}
+                <div class="modal-body py-4">
+                    <input type="hidden" name="reservation_id" id="cancelReservationId">
+                    <div class="form-group mb-4">
+                        <label for="reasonForCancelling" class="font-weight-bold text-muted">Reason for Cancellation</label>
+                        <textarea class="form-control border-2 rounded-lg" 
+                                  id="reasonForCancelling" 
+                                  name="reason_for_cancelling" 
+                                  rows="4" 
+                                  required
+                                  style="resize: none; border-color: #e0e0e0;"></textarea>
+                        <small class="form-text text-muted">Please provide a brief explanation for cancelling this reservation.</small>
+                    </div>
+                    <div class="alert-warning border-warning">
+                        <div class="d-flex align-items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle-fill mr-2" viewBox="0 0 16 16">
+                                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/>
+                            </svg>
+                            <span class="font-weight-bold">Cancellation cannot be undone. Are you sure you want to proceed?</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary px-4 rounded-pill" data-dismiss="modal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left mr-1" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+                        </svg>
+                        Go Back
+                    </button>
+                    <button type="submit" class="btn btn-danger px-4 rounded-pill">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle-fill mr-1" viewBox="0 0 16 16">
+                            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/>
+                        </svg>
+                        Confirm Cancellation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Handle view reservation button clicks
+        document.querySelectorAll(".view-reservation").forEach(button => {
+            button.addEventListener("click", function () {
+                // Update modal content with reservation data
+                document.getElementById("modal-plate").textContent = this.dataset.plate;
+                document.getElementById("modal-make-model").textContent = 
+                    this.dataset.make + " " + this.dataset.model;
+                document.getElementById("modal-rental-period").textContent = 
+                    this.dataset.start + " - " + this.dataset.end;
+                document.getElementById("modal-method").textContent = this.dataset.method;
+                document.getElementById("modal-status").textContent = this.dataset.status;
+                document.getElementById("modal-cost").textContent = this.dataset.cost;
+                
+                // Show the modal
+                $('#receiptModal').modal('show');
+            });
+        });
+
+        // Handle cancel reservation button clicks
+        document.querySelectorAll(".cancel-reservation").forEach(button => {
+            button.addEventListener("click", function() {
+                const reservationId = this.dataset.reservationId;
+                document.getElementById("cancelReservationId").value = reservationId;
+                $('#cancelModal').modal('show');
+            });
+        });
+
+        // Common modal cleanup function
+        function cleanUpModal(modalId) {
+            $(modalId).modal('hide');
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open').css('padding-right', '');
+        }
+
+        // Set up modal cleanup for both modals
+        ['#receiptModal', '#cancelModal'].forEach(modalId => {
+            // When modal is hidden
+            $(modalId).on('hidden.bs.modal', function () {
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open').css('padding-right', '');
+            });
+
+            // When clicking close buttons
+            $(`${modalId} .close, ${modalId} .btn-secondary`).on('click', function() {
+                cleanUpModal(modalId);
+            });
+
+            // When clicking outside modal
+            $(modalId).on('click', function(e) {
+                if (e.target === this) {
+                    cleanUpModal(modalId);
+                }
+            });
+        });
+
+        // Handle form submission normally
+        document.getElementById("cancelForm").addEventListener("submit", function() {
+            cleanUpModal('#cancelModal');
+            return true; // Allow normal form submission
+        });
+
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            document.querySelectorAll('.alert').forEach(function(alert) {
+                new bootstrap.Alert(alert).close();
+            });
+        }, 5000);
+    });
+</script>
+{% endblock %} 
