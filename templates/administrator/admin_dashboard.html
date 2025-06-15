@@ -1,100 +1,140 @@
-{% extends "administrator/base.html" %}
+{% extends "administrator/admin_base.html" %}
 
 {% block content %}
-
 <div class="page-wrapper">
     <!-- Page header -->
     <div class="page-header d-print-none">
+       
         <div class="container-xl">
             <div class="row g-2 align-items-center">
                 <div class="col">
-                    <!-- Page pre-title -->
                     <div class="page-pretitle">
-                        Car Rental System
+                        Ashley's Car Rental System
                     </div>
                     <h2 class="page-title">
-                        Ashley's Car Rental System
+                        Administrator Dashboard
                     </h2>
                 </div>
             </div>
-        
         </div>
     </div>
 
     <div class="page-body">
         <div class="container-xl">
             {% for message in messages %}
-            <div class="alert 
-                {% if message.tags == 'success' %}alert-success
-                {% elif message.tags == 'error' %}alert-danger
-                {% elif message.tags == 'warning' %}alert-warning
-                {% endif %}
-                alert-dismissible fade show" role="alert">
-                {{ message|linebreaksbr }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        {% endfor %}
+                <div class="alert 
+                    {% if message.tags == 'success' %}alert-success
+                    {% elif message.tags == 'error' %}alert-danger
+                    {% elif message.tags == 'warning' %}alert-warning
+                    {% endif %}
+                    alert-dismissible fade show" role="alert">
+                    {{ message|linebreaksbr }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+
             <div class="row row-cards">
+                <!-- Pending -->
                 <div class="col-sm-6 col-lg-3">
-                    <a href="{% url "driver_list" %}" class="text-decoration-none">
-                        <div class="card card-sm card-link-pop">
-                            <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col-auto">
-                                        <span class="bg-blue text-white avatar">
-                                            <!-- Driver Icon -->
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                                <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
-                                                <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-                                            </svg>
-                                        </span>
+                    <a href="{% url 'pending_reservations' %}" class="card card-sm card-link-pop">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-yellow text-white avatar">
+                                        <!-- Clock Icon -->
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clock" viewBox="0 0 16 16">
+                                            <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71z"/>
+                                            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0"/>
+                                          </svg>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium" style="font-size: 1.2rem; color: #b8860b;">
+                                        {{ reservation_counts.pending }} Pending
                                     </div>
-                                    <div class="col">
-                                        <div class="font-weight-medium" style="font-size: 1.2rem; color:rgb(59, 108, 172);">
-                                            {{ driver_count }} Drivers
-                                        </div>
-                                        <div class="text-muted">Total driver count</div>
-                                    </div>
+                                    <div class="text-muted">Reservations</div>
                                 </div>
                             </div>
                         </div>
                     </a>
                 </div>
-                
+
+                <!-- Approved -->
                 <div class="col-sm-6 col-lg-3">
-                    <a href="{% url "car_list" %}" class="text-decoration-none">
-                        <div class="card card-sm card-link-pop">
-                            <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col-auto">
-                                        <span class="bg-green text-white avatar">
-                                            <!-- Car Icon -->
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-car" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                                <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                                                <path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                                                <path d="M5 17h-2v-6l2 -5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0h-6m-6 -6h15m-6 0v-5" />
-                                            </svg>
-                                        </span>
+                    <a href="{% url 'approved_reservations' %}" class="card card-sm card-link-pop">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-blue text-white avatar">
+                                        <!-- Check Icon -->
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
+                                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                            <path d="m10.97 4.97-.02.022-3.473 4.425-2.093-2.094a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05"/>
+                                          </svg>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium" style="font-size: 1.2rem; color: #007bff;">
+                                        {{ reservation_counts.approved }} Approved
                                     </div>
-                                    <div class="col">
-                                        <div class="font-weight-medium" style="font-size: 1.2rem; color:rgb(59, 108, 172);">
-                                            {{ car_count }} Cars
-                                        </div>
-                                        <div class="text-muted">Total car count</div>
+                                    <div class="text-muted">Reservations</div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Cancelled -->
+                <div class="col-sm-6 col-lg-3">
+                    <a href="{% url 'cancelled_reservations' %}" class="card card-sm card-link-pop">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-red text-white avatar">
+                                        <!-- X Icon -->
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+                                          </svg>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium" style="font-size: 1.2rem; color: #dc3545;">
+                                        {{ reservation_counts.cancelled }} Cancelled
                                     </div>
+                                    <div class="text-muted">Reservations</div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Completed -->
+                <div class="col-sm-6 col-lg-3">
+                    <a href="{% url 'completed_reservations' %}" class="card card-sm card-link-pop">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-green text-white avatar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-calendar-check" viewBox="0 0 16 16">
+                                            <path d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0"/>
+                                            <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
+                                          </svg>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div class="font-weight-medium" style="font-size: 1.2rem; color: #28a745;">
+                                        {{ reservation_counts.completed }} Completed
+                                    </div>
+                                    <div class="text-muted">Reservations</div>
                                 </div>
                             </div>
                         </div>
                     </a>
                 </div>
             </div>
-        
+            
         </div>
     </div>
-
 </div>
 {% endblock content %}
-
-

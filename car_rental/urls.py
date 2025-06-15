@@ -24,9 +24,16 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('administrator/', include('administrator.urls')),
     path('user/', include('user.urls')),
+    path('driver/', include('driver.urls')),
     path('', views.homepage, name="homepage"),
     path('signup/', views.signup_view, name='signup'),
     path("login/", views.login_view, name="login"),
+    path("adminlogin/", views.adminlogin_view, name="admin_login"),
+    path("driverlogin/", views.driverlogin_view, name="driver_login"),
+    path("logout-admin/", views.adminlogout_view, name="admin_logout"),
+    path("driverlogout/", views.driverlogout_view, name="driver_logout"),
+    path('messages/', views.chat_messages, name='chat_messages'),
+    path('send/', views.send_chat_message, name='send_chat_message'),
     path("logout/", views.logout_view, name="logout"),
 ]
 

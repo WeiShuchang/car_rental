@@ -58,7 +58,7 @@
 
       <div class="col-md-8 block-9 mb-md-5">
    
-        <form method="POST" class="bg-light px-5 py-2 contact-form">
+        <form method="POST" class="bg-light px-5 py-2 contact-form text-dark">
           {% csrf_token %}
           <h2 class="text-center">Sign Up</h2>
       
@@ -74,15 +74,17 @@
               </div>
           {% endfor %}
       
-          <div class="row">
+          <div class="row ">
               <div class="col-md-6 form-group">
-                  <input type="text" name="username" class="form-control" placeholder="Username" value="{{ form.username.value|default_if_none:'' }}" required>
+                  <label for="username" class="form-label">Username</label>
+                  <input type="text" name="username" id="username" class="form-control" value="{{ form.username.value|default_if_none:'' }}" required>
                   {% if form.username.errors %}
                       <small class="text-danger">{{ form.username.errors.0 }}</small>
                   {% endif %}
               </div>
               <div class="col-md-6 form-group">
-                  <input type="email" name="email" class="form-control" placeholder="Email" value="{{ form.email.value|default_if_none:'' }}" required>
+                  <label for="email" class="form-label">Email</label>
+                  <input type="email" name="email" id="email" class="form-control" value="{{ form.email.value|default_if_none:'' }}" required>
                   {% if form.email.errors %}
                       <small class="text-danger">{{ form.email.errors.0 }}</small>
                   {% endif %}
@@ -91,13 +93,15 @@
       
           <div class="row">
               <div class="col-md-6 form-group">
-                  <input type="text" name="first_name" class="form-control" placeholder="First Name" value="{{ form.first_name.value|default_if_none:'' }}" required>
+                  <label for="first_name" class="form-label">First Name</label>
+                  <input type="text" name="first_name" id="first_name" class="form-control" value="{{ form.first_name.value|default_if_none:'' }}" required>
                   {% if form.first_name.errors %}
                       <small class="text-danger">{{ form.first_name.errors.0 }}</small>
                   {% endif %}
               </div>
               <div class="col-md-6 form-group">
-                  <input type="text" name="last_name" class="form-control" placeholder="Last Name" value="{{ form.last_name.value|default_if_none:'' }}" required>
+                  <label for="last_name" class="form-label">Last Name</label>
+                  <input type="text" name="last_name" id="last_name" class="form-control" value="{{ form.last_name.value|default_if_none:'' }}" required>
                   {% if form.last_name.errors %}
                       <small class="text-danger">{{ form.last_name.errors.0 }}</small>
                   {% endif %}
@@ -105,16 +109,16 @@
           </div>
       
           <div class="row">
-          
               <div class="col-md-6 form-group">
-                  <input type="password" name="password1" class="form-control" placeholder="Password" required>
+                  <label for="password1" class="form-label">Password</label>
+                  <input type="password" name="password1" id="password1" class="form-control" required>
                   {% if form.password1.errors %}
                       <small class="text-danger">{{ form.password1.errors.0 }}</small>
                   {% endif %}
               </div>
-        
               <div class="col-md-6 form-group">
-                  <input type="password" name="password2" class="form-control" placeholder="Confirm Password" required>
+                  <label for="password2" class="form-label">Confirm Password</label>
+                  <input type="password" name="password2" id="password2" class="form-control" required>
                   {% if form.password2.errors %}
                       <small class="text-danger">{{ form.password2.errors.0 }}</small>
                   {% endif %}
@@ -126,7 +130,7 @@
           </div>
           
           <div class="text-center">
-            <p>Already have an account? <a href="{% url 'login' %}" style="text-decoration:underline;">Log in here</a></p>
+              <p>Already have an account? <a href="{% url 'login' %}" style="text-decoration:underline;">Log in here</a></p>
           </div>
       </form>
       

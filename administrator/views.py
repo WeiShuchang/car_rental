@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.decorators.csrf import csrf_exempt, csrf_protect
-from .models import Car, Driver, Reservation
-from .forms import CarForm, DriverForm, SignUpForm
+from django.views.decorators.csrf import csrf_protect
+from .models import Car, Driver, Reservation, UserProfile, ChatRoom
+from .forms import CarForm
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.contrib import messages
@@ -9,21 +9,57 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-
 from django.shortcuts import render, redirect
-
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.utils import timezone
+from django.db.models import Count
+from django.contrib.auth.hashers import make_password
+
 
 def admin_dashboard(request):
+    reservation_counts = {
+        'pending': Reservation.objects.filter(status='pending').count(),
+        'approved': Reservation.objects.filter(status='approved').count(),
+        'cancelled': Reservation.objects.filter(status='cancelled').count(),
+        'completed': Reservation.objects.filter(status='completed').count(),
+    }
+
+    return render(request, "administrator/admin_dashboard.html", {
+        'reservation_counts': reservation_counts
+    })
+
+
+def superadmin_dashboard(request):
+    # Existing counts
+    reservation_count = Reservation.objects.count()
+    user_count = UserProfile.objects.filter(role='user').count()
+    admin_count = UserProfile.objects.filter(role='admin').count()
     driver_count = Driver.objects.count()
     car_count = Car.objects.count()
     
-    context = {
-        'driver_count': driver_count,
-        'car_count': car_count,
+    # Get reservation status counts
+    status_counts = Reservation.objects.values('status').annotate(count=Count('status')).order_by('status')
+    
+    # Prepare data for chart
+    status_data = {
+        'labels': [choice[1] for choice in Reservation.STATUS_CHOICES],
+        'data': [0] * len(Reservation.STATUS_CHOICES)
     }
     
-    return render(request, "administrator/admin_dashboard.html", context)
+    for item in status_counts:
+        index = [choice[0] for choice in Reservation.STATUS_CHOICES].index(item['status'])
+        status_data['data'][index] = item['count']
+    
+    context = {
+        'reservation_count': reservation_count,
+        'user_count': user_count,
+        'admin_count': admin_count,
+        'driver_count': driver_count,
+        'car_count': car_count,
+        'status_data': status_data,  # Add this line
+    }
+    
+    return render(request, "administrator/superadmin_dashboard.html", context)
 
 def car_list(request):
     cars_list = Car.objects.all().order_by('-id')
@@ -209,8 +245,6 @@ def update_driver(request, driver_id):
         return redirect("driver_list")
 
     return render(request, "administrator/driver_list.html", {"driver": driver})
-
-
 def pending_reservations(request):
     reservations = Reservation.objects.filter(status='pending').select_related('car', 'user')
     drivers = Driver.objects.filter(availability=True).select_related('user')  # Get only available drivers
@@ -219,6 +253,7 @@ def pending_reservations(request):
         'reservations': reservations,
         'drivers': drivers
     })
+
 
 def approve_reservation(request, reservation_id):
     if request.method == "POST":
@@ -241,18 +276,22 @@ def approve_reservation(request, reservation_id):
 
             # Assign driver & update availability
             reservation.driver = driver
-       
             driver.save()
 
         # Approve reservation
         reservation.status = "approved"
         reservation.save()
 
+        # Create chat room for this reservation if it doesn't exist
+        if not hasattr(reservation, 'chat_room'):
+            ChatRoom.objects.create(reservation=reservation)
+
         messages.success(request, "Reservation approved successfully!")
         return redirect("pending_reservations")
 
     messages.error(request, "Invalid request method.")
     return redirect("pending_reservations")
+
 
 def cancel_reservation(request):
     if request.method == "POST":
@@ -285,27 +324,49 @@ def cancel_reservation(request):
             print("Error:", str(e))  # Debugging
 
     return redirect("pending_reservations")
-
 def approved_reservations(request):
     reservations = Reservation.objects.filter(status='approved').select_related('user', 'car', 'driver').order_by("-id")
     return render(request, 'administrator/approved_reservations.html', {'reservations': reservations})
-
 def cancelled_reservations(request):
     reservations = Reservation.objects.filter(status='cancelled').select_related('user', 'car', 'driver').order_by("-id")
     return render(request, 'administrator/cancelled_reservations.html', {'reservations': reservations})
+
 
 def complete_reservation(request, reservation_id):
     reservation = get_object_or_404(Reservation, id=reservation_id)
     
     if request.method == "POST":
-        reservation.status = 'completed'
-        reservation.save()
-        messages.success(request, "Reservation marked as completed.")
+        # Check if reservation is already completed
+        if reservation.status == 'completed':
+            messages.warning(request, "This reservation is already completed.")
+            return redirect('approved_reservations')  # Or your appropriate redirect
+        
+        # Validate that reservation is in an approvable state
+        if reservation.status != 'approved':
+            messages.error(request, "Only approved reservations can be marked as completed.")
+            return redirect('approved_reservations')
+            
+        try:
+            # Update reservation status and set completion timestamp
+            reservation.status = 'completed'
+            reservation.date_completed = timezone.now()
+            
+            # Free up the driver if one was assigned
+            if reservation.driver:
+                reservation.driver.availability = True
+                reservation.driver.save()
+                
+            reservation.save()
+            
+            messages.success(request, f"Reservation #{reservation.id} successfully marked as completed.")
+        except Exception as e:
+            messages.error(request, f"Error completing reservation: {str(e)}")
+            # Consider logging the error here as well
     
     return redirect('approved_reservations')  # Adjust to your actual URL name
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
+
 def completed_reservations(request):
     reservations = Reservation.objects.filter(status='completed').order_by('-end_date')
     
@@ -327,3 +388,77 @@ def update_payment_status(request, reservation_id):
             messages.error(request, 'Invalid payment status selected.')
             
     return redirect('pending_reservations')  # Replace with your actual redirect target
+
+
+
+def all_users_list(request):
+    users = UserProfile.objects.filter(role='user').select_related('user')
+    return render(request, 'administrator/all_users_list.html', {'users': users})
+
+
+def all_admins_list(request):
+    admins = UserProfile.objects.filter(role='admin').select_related('user')
+    return render(request, 'administrator/all_admins_list.html', {'admins': admins})
+
+@login_required
+def all_reservations(request):
+    reservations_list = Reservation.objects.all().select_related(
+        'user', 'car', 'driver', 'driver__user'
+    ).order_by('-created_at')
+    
+    paginator = Paginator(reservations_list, 10)  # Show 10 reservations per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'administrator/all_reservations.html', {
+        'page_obj': page_obj,
+        'reservations': page_obj.object_list  # Add this line
+    })
+def add_admin(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        contact_number = request.POST.get('contact_number')
+
+        # Validate required fields
+        if not all([username, email, password]):
+            messages.error(request, 'Username, email and password are required')
+            return redirect('all_admins_list')
+
+        try:
+            # Check if user already exists
+            user, created = User.objects.get_or_create(
+                username=username,
+                defaults={
+                    'email': email,
+                    'password': make_password(password),
+                    'first_name': first_name,
+                    'last_name': last_name,
+                    'is_staff': True
+                }
+            )
+            
+            if not created:
+                messages.error(request, 'Username already exists')
+                return redirect('all_admins_list')
+            
+            # Create or update user profile
+            UserProfile.objects.update_or_create(
+                user=user,
+                defaults={
+                    'role': 'admin',
+                    'contact_number': contact_number
+                }
+            )
+            
+            messages.success(request, 'Admin user created successfully')
+            return redirect('all_admins_list')
+            
+        except Exception as e:
+            messages.error(request, f'Error creating admin: {str(e)}')
+            return redirect('all_admins_list')
+    
+    return redirect('all_admins_list')

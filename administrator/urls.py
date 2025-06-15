@@ -4,7 +4,9 @@ from . import views
 
 urlpatterns = [
     path('', views.admin_dashboard, name="admin_dashboard"),
+    path('superadmin/', views.superadmin_dashboard, name="superadmin_dashboard"),
     path('cars/', views.car_list, name='car_list'),
+
     path('add-car/', views.add_car, name='add_car'),
     path("delete-car/<int:car_id>/", views.delete_car, name="delete_car"),
     path("cars/<int:car_id>/edit/", views.edit_car, name="edit_car"),
@@ -22,4 +24,9 @@ urlpatterns = [
     path("complete-reservation/<int:reservation_id>/", views.complete_reservation, name="complete_reservation"),
     path('completed-travels/', views.completed_reservations, name='completed_reservations'),
     path('reservations/<int:reservation_id>/update-payment/', views.update_payment_status, name='update_payment_status'),
+    path('superadmin/users/', views.all_users_list, name='all_users_list'),
+    path('superadmin/admins/', views.all_admins_list, name='all_admins_list'),
+    path('reservations/all/', views.all_reservations, name='all_reservations'),
+    path('adding-admin/', views.add_admin, name='add_admin'),
+  
 ]

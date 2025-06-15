@@ -1,0 +1,87 @@
+{% extends "driver/driver_base.html" %}
+{% load humanize %}
+{% block content %}
+<div class="page-wrapper">
+    <!-- Header remains the same -->
+    <div class="page-header d-print-none mb-2">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <div class="page-pretitle">
+                        Ashley's Car Rental
+                    </div>
+                    <h2 class="page-title">
+                        Driver Completed Reservations
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body container">
+        <div class="row g-2 container">
+            <div class="col-12">
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-sm card-table table-vcenter text-nowrap datatable">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Car</th>
+                                    <th>Trip Dates</th>
+                              
+                                    <th>Completed On</th>  <!-- Changed from Status -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if reservations %}
+                                    {% for reservation in reservations %}
+                                    <tr>
+                                        <td>
+                                            {{ reservation.user.first_name }} {{ reservation.user.last_name }}
+                                        </td>
+                            
+                                        <td>
+                                            <div>
+                                                {% if reservation.car.image %}
+                                                    <img src="{{ reservation.car.image.url }}" alt="{{ reservation.car }}" class="img-thumbnail" style="width: 80px; height: auto;">
+                                                {% else %}
+                                                    <img src="https://via.placeholder.com/80" alt="No Image" class="img-thumbnail">
+                                                {% endif %}
+                                            </div>
+                                            <div>{{ reservation.car.model }}</div>
+                                        </td>
+                                        <td>
+                                            <strong>From:</strong> {{ reservation.start_date|date:"M j, Y" }}<br>
+                                            <strong>To:</strong> {{ reservation.end_date|date:"M j, Y" }}
+                                        </td>
+                                      
+                                     <td>
+                                        {% if reservation.date_completed %}
+                                            <strong >
+                                                {{ reservation.date_completed|date:"M j, Y" }}<br>
+                                                {{ reservation.date_completed|time:"g:i A" }}
+                                            </strong>
+                                        {% else %}
+                                            <strong class="text-muted">
+                                                No date recorded
+                                            </strong>
+                                        {% endif %}
+                                    </td>
+
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">No completed reservations found</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,474 @@
+{% extends "driver/driver_base.html" %}
+{% load static %}
+{% block content %}
+<div class="page-wrapper">
+    <!-- Hero Profile Section -->
+    {% comment %} <div class="page-header d-print-none" >
+        <div class="container-xl">
+            <div class="row g-4 align-items-center">
+                <div class="col-auto">
+                    <span class="avatar avatar-xxl avatar-rounded" 
+                          style="background-image: url({% if driver.image %}{{ driver.image.url }}{% else %}{% static 'driver_images/default.jpg' %}{% endif %});
+                          border: 3px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    </span>
+                </div>
+                <div class="col">
+                    <h1 class="page-title text-dark">
+                        {{ driver.user.get_full_name|default:driver.user.username }}
+                    </h1>
+                    <div class="text-white-80">
+                        <div class="d-flex align-items-center gap-2 mt-2">
+                            <span class="badge {% if driver.availability %}bg-green-lt{% else %}bg-red-lt{% endif %}">
+                                {% if driver.availability %}AVAILABLE FOR RIDES{% else %}CURRENTLY UNAVAILABLE{% endif %}
+                            </span>
+                            <span class="badge bg-white text-blue">
+                                DRIVER ID: {{ driver.license_number|slice:":8"|upper }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> {% endcomment %}
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="row">
+                <!-- Main Profile Card -->
+                <div class="col-lg-8">
+                    <div class="card card-lg">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-4">
+                                        <h2 class="h3 mb-3">Personal Information</h2>
+                                        <div class="mb-3">
+                                            <label class="form-label text-muted">Full Name</label>
+                                            <div class="h4">{{ driver.user.get_full_name|default:"Not provided" }}</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-muted">Username</label>
+                                            <div class="h4 text-primary">@{{ driver.user.username }}</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-muted">Account Status</label>
+                                            <div>
+                                                <span class="badge {% if driver.availability %}bg-green{% else %}bg-red{% endif %}">
+                                                    {% if driver.availability %}Active{% else %}Inactive{% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-4">
+                                        <h2 class="h3 mb-3">Driver Details</h2>
+                                        <div class="mb-3">
+                                            <label class="form-label text-muted">License Number</label>
+                                            <div class="h4">{{ driver.license_number }}</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-muted">Phone Number</label>
+                                            <div class="h4">{{ driver.phone_number }}</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-muted">Member Since</label>
+                                            <div class="h4">{{ driver.user.date_joined|date:"F Y" }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                    
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Card -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="mb-4">
+                                <span class="avatar avatar-xl avatar-rounded" 
+                                      style="background-image: url({% if driver.image %}{{ driver.image.url }}{% else %}{% static 'driver_images/default.jpg' %}{% endif %});
+                                      border: 3px solid {% if driver.availability %}#10b981{% else %}#ef4444{% endif %};">
+                                </span>
+                            </div>
+                            <h3 class="mb-1">{{ driver.user.get_full_name|default:driver.user.username }}</h3>
+                            <div class="text-muted mb-3">Professional Driver</div>
+                            
+                            <div class="mb-4">
+                                <span class="badge bg-{% if driver.availability %}green{% else %}red{% endif %}-lt p-2 px-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-{% if driver.availability %}check{% else %}x{% endif %}" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="{% if driver.availability %}#10b981{% else %}#ef4444{% endif %}" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M5 12l5 5l10 -10"></path>
+                                    </svg>
+                                    {% if driver.availability %}Currently accepting rides{% else %}Not accepting rides{% endif %}
+                                </span>
+                            </div>
+                            
+                            <div class="d-flex justify-content-center gap-3 mt-4">
+                                <a href="#" class="btn btn-icon" aria-label="Contact support">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-headset" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M4 14v-3a8 8 0 1 1 16 0v3"></path>
+                                        <path d="M18 19c0 1.657 -2.686 3 -6 3"></path>
+                                        <path d="M4 14a2 2 0 0 1 2 -2h1a2 2 0 0 1 2 2v3a2 2 0 0 1 -2 2h-1a2 2 0 0 1 -2 -2v-3z"></path>
+                                        <path d="M15 14a2 2 0 0 1 2 -2h1a2 2 0 0 1 2 2v3a2 2 0 0 1 -2 2h-1a2 2 0 0 1 -2 -2v-3z"></path>
+                                    </svg>
+                                </a>
+                                <a href="#" class="btn btn-icon" aria-label="Help center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-help" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path>
+                                        <path d="M12 17l0 .01"></path>
+                                        <path d="M12 13.5a1.5 1.5 0 0 1 1 -1.5a2.6 2.6 0 1 0 -3 -4"></path>
+                                    </svg>
+                                </a>
+                                <a href="#" class="btn btn-icon" aria-label="Documents">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-text" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
+                                        <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
+                                        <path d="M9 9l1 0"></path>
+                                        <path d="M9 13l6 0"></path>
+                                        <path d="M9 17l6 0"></path>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+  
+       <!-- Floating Chat Widget -->
+    <div class="chat-widget">
+        <div class="chat-header" onclick="toggleChat()">
+            <div>
+                <strong>Driver Messages</strong>
+            </div>
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M4 6l16 0"></path>
+                    <path d="M4 12l16 0"></path>
+                    <path d="M4 18l16 0"></path>
+                </svg>
+            </div>
+        </div>
+        
+        <div class="chat-container">
+    <!-- Message rooms sidebar -->
+    <div class="chat-rooms">
+        {% for room in chat_rooms %}
+        <div class="chat-room {% if forloop.first %}active{% endif %}" 
+             onclick="switchRoom({{ room.reservation.id }})"
+             data-room-id="{{ room.reservation.id }}">
+            <div class="d-flex align-items-center">
+                <div class="chat-room-name">
+                    {{ room.reservation.user.get_full_name|default:room.reservation.user.username }}
+                </div>
+                {% if room.unread_count > 0 %}
+                <span class="chat-room-unread">{{ room.unread_count }}</span>
+                {% endif %}
+            </div>
+            <div class="chat-room-preview">
+                {% with last_message=room.messages.last %}
+                    {% if last_message %}
+                        {{ last_message.content|truncatechars:30 }}
+                    {% else %}
+                        No messages yet
+                    {% endif %}
+                {% endwith %}
+            </div>
+            <div class="chat-room-time">
+                {% with last_message=room.messages.last %}
+                    {% if last_message %}
+                        {{ last_message.timestamp|timesince }} ago
+                    {% else %}
+                        {{ room.created_at|timesince }} ago
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="chat-room">
+            <div class="chat-room-name">No active chats</div>
+            <div class="chat-room-preview">You have no active reservations with chats</div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Chat content area -->
+    <div class="chat-content">
+        {% if chat_rooms %}
+            {% for room in chat_rooms %}
+            <div class="chat-body" id="chat-body-{{ room.reservation.id }}" {% if not forloop.first %}style="display:none"{% endif %}>
+                {% for message in room.messages.all %}
+                    <div class="message {% if message.sender == request.user %}sent{% else %}received{% endif %}">
+                        <span class="message-time">{{ message.timestamp|date:"H:i" }}</span>
+                        <div class="message-content">
+                            {{ message.content }}
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="no-messages">
+                        No messages yet in this conversation
+                    </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="chat-body">
+                <div class="no-messages">
+                    No active chats available
+                </div>
+            </div>
+        {% endif %}
+        
+        <div class="chat-footer">
+            <div class="d-flex">
+                <input type="text" class="form-control chat-input" placeholder="Type your message...">
+                <button class="btn btn-primary chat-send-btn" onclick="sendMessage()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M10 14l11 -11"></path>
+                        <path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+    </div>
+
+      <script>
+      // Toggle chat widget open/closed
+      function toggleChat() {
+        const chatWidget = document.querySelector('.chat-widget');
+        chatWidget.classList.toggle('opened');
+        
+        // Store state in sessionStorage
+        const isOpen = chatWidget.classList.contains('opened');
+        sessionStorage.setItem('chatWidgetOpen', isOpen);
+        
+        // If opening, scroll to bottom of active chat
+        if (isOpen) {
+          const activeRoom = document.querySelector('.chat-body[style*="display: block"]') || 
+                           document.querySelector('.chat-body');
+          if (activeRoom) {
+            setTimeout(() => {
+              activeRoom.scrollTop = activeRoom.scrollHeight;
+            }, 100);
+          }
+        }
+      }
+      
+      // Switch between different message rooms
+      function switchRoom(roomId) {
+        // Hide all chat rooms
+        document.querySelectorAll('.chat-body').forEach(room => {
+          room.style.display = 'none';
+        });
+        
+        // Show selected room
+        document.getElementById(`${roomId}-room`).style.display = 'block';
+        
+        // Update active room in sidebar
+        document.querySelectorAll('.chat-room').forEach(room => {
+          room.classList.remove('active');
+        });
+        event.currentTarget.classList.add('active');
+        
+        // Scroll to bottom of chat
+        const chatBody = document.getElementById(`${roomId}-room`);
+        setTimeout(() => {
+          chatBody.scrollTop = chatBody.scrollHeight;
+        }, 100);
+      }
+      
+      // Send message function
+      function sendMessage() {
+        const input = document.querySelector('.chat-input');
+        const message = input.value.trim();
+        
+        if (message) {
+          // Find the currently active chat room
+          const activeRoom = document.querySelector('.chat-body[style*="display: block"]');
+          
+          if (activeRoom) {
+            const newMessage = document.createElement('div');
+            newMessage.className = 'message sent';
+            newMessage.innerHTML = `
+              <span class="message-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+              <div class="message-content">${message}</div>
+            `;
+            activeRoom.appendChild(newMessage);
+            input.value = '';
+            activeRoom.scrollTop = activeRoom.scrollHeight;
+          }
+        }
+      }
+      
+      // Initialize chat widget state
+      document.addEventListener('DOMContentLoaded', function() {
+        const chatWidget = document.querySelector('.chat-widget');
+        const wasOpen = sessionStorage.getItem('chatWidgetOpen') === 'true';
+        
+        // Close by default on page load
+        chatWidget.classList.remove('opened');
+        
+        // Only auto-open if there are unread messages and it was previously open
+        const unreadBadge = document.querySelector('.unread-badge');
+        if (unreadBadge && parseInt(unreadBadge.textContent) > 0 && wasOpen) {
+          toggleChat();
+        }
+        
+        // Set up event listeners
+        document.querySelector('.chat-input').addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            sendMessage();
+          }
+        });
+        
+        document.querySelector('.chat-send-btn').addEventListener('click', sendMessage);
+      });
+
+      // Reset chat state on page navigation
+      window.addEventListener('beforeunload', function() {
+        sessionStorage.removeItem('chatWidgetOpen');
+      });
+    </script>
+
+    
+
+<script>
+// Initialize with first room active
+let currentRoomId = {% if chat_rooms %}{{ chat_rooms.0.reservation.id }}{% else %}null{% endif %};
+
+function switchRoom(roomId) {
+    if (currentRoomId === roomId) return;
+    
+    currentRoomId = roomId;
+    
+    // Update active room in sidebar
+    document.querySelectorAll('.chat-room').forEach(room => {
+        room.classList.remove('active');
+        if (parseInt(room.dataset.roomId) === roomId) {
+            room.classList.add('active');
+        }
+    });
+    
+    // Hide all chat bodies
+    document.querySelectorAll('.chat-body').forEach(body => {
+        body.style.display = 'none';
+    });
+    
+    // Show selected chat body
+    const activeBody = document.getElementById(`chat-body-${roomId}`);
+    if (activeBody) {
+        activeBody.style.display = 'block';
+        activeBody.scrollTop = activeBody.scrollHeight;
+    }
+}
+
+
+async function sendMessage() {
+    const chatInput = document.querySelector('.chat-input');
+    const content = chatInput.value.trim();
+    if (!content || !currentRoomId) return;
+    
+    try {
+        const response = await fetch(`/api/chat/${currentRoomId}/send/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({ content: content })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            chatInput.value = '';
+            
+            // Add message to UI
+            const chatBody = document.getElementById(`chat-body-${currentRoomId}`);
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message sent';
+            messageDiv.innerHTML = `
+                <span class="message-time">${data.message.timestamp}</span>
+                <div class="message-content">
+                    ${data.message.content}
+                </div>
+            `;
+            chatBody.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatBody.scrollTop = chatBody.scrollHeight;
+            
+            // Update room preview
+            updateRoomPreview(currentRoomId, data.message.content);
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+    }
+}
+
+function updateRoomPreview(roomId, preview) {
+    const roomElement = document.querySelector(`.chat-room[data-room-id="${roomId}"]`);
+    if (roomElement) {
+        const previewElement = roomElement.querySelector('.chat-room-preview');
+        if (previewElement) {
+            previewElement.textContent = preview.length > 30 ? preview.substring(0, 30) + '...' : preview;
+        }
+        
+        const timeElement = roomElement.querySelector('.chat-room-time');
+        if (timeElement) {
+            timeElement.textContent = 'Just now';
+        }
+    }
+}
+
+// Initialize with chat closed
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('.chat-container').style.display = 'none';
+    
+    // Set up enter key for message input
+    document.querySelector('.chat-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+    
+    // Optional: Poll for new messages every 5 seconds
+    setInterval(pollForNewMessages, 5000);
+});
+
+async function pollForNewMessages() {
+    if (!currentRoomId || document.querySelector('.chat-container').style.display === 'none') return;
+    
+    try {
+        const response = await fetch(`/api/chat/${currentRoomId}/messages/`);
+        const data = await response.json();
+        
+        const chatBody = document.getElementById(`chat-body-${currentRoomId}`);
+        const lastMessageId = chatBody.lastChild?.dataset?.messageId;
+        
+        // Check if there are new messages
+        if (data.messages.length > 0 && 
+            (!lastMessageId || data.messages[data.messages.length - 1].id > parseInt(lastMessageId))) {
+            switchRoom(currentRoomId); // Refresh the room
+        }
+    } catch (error) {
+        console.error('Error polling for new messages:', error);
+    }
+}
+</script>
+
+{% endblock content %}

@@ -4,38 +4,46 @@
 
 {% block content %}
 <style>
+     /* NEW IMAGE-ONLY STYLES */
+    .car-detail-box img {
+        width: 100%;
+        height: 300px; /* Fixed height */
+        object-fit: cover;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .car-detail-box .col-md-6:first-child {
+        padding-right: 15px; /* Add some spacing between image and text */
+    }
+    
+    /* Keep all your existing styles exactly the same */
     .car-detail-box {
         background: #fff;
-        padding: 15px; /* Reduce padding */
+        padding: 15px;
         border-radius: 10px;
         box-shadow: none;
     }
     .date-input {
-        height: 30px; /* Decrease height */
+        height: 30px;
         font-size: 14px;
     }
     
     .car-detail-box .row {
-        align-items: center; /* Aligns the image and text vertically */
-    }
-    
-    .car-detail-box img {
-        height: 100%; /* Ensures the image takes full height */
-        object-fit: cover; /* Prevents distortion */
+        align-items: center;
     }
     
     .car-detail-box .col-md-6 {
         display: flex;
         flex-direction: column;
-        justify-content: center; /* Center text vertically */
+        justify-content: center;
     }
     
     .car-detail-box h2,
     .car-detail-box h3,
     .car-detail-box p {
-        margin-bottom: 5px; /* Reduce spacing */
+        margin-bottom: 5px;
     }
-    
     .btn.btn-primary {
         margin-top: 10px; /* Smaller margin above the button */
     }

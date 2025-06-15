@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'administrator',
     'user',
     'driver',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -46,6 +47,19 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# Configure ASGI application
+ASGI_APPLICATION = 'car_rental.asgi.application'
+
+# Channel layers (using Redis in production, in-memory for development)
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],  # Redis server address
+        },
+    },
+}
 
 ROOT_URLCONF = 'car_rental.urls'
 
@@ -60,6 +74,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'driver.context_processors.driver_reservation_counts',
             ],
         },
     },
@@ -123,5 +138,5 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 

@@ -1,0 +1,79 @@
+{% extends "driver/driver_base.html" %}
+{% load humanize %}
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header d-print-none mb-2">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <div class="page-pretitle">
+                        Ashley's Car Rental
+                    </div>
+                    <h2 class="page-title">
+                        Driver Assigned Reservations
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body container">
+        <div class="row g-2 container">
+            <div class="col-12">
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-sm card-table table-vcenter text-nowrap datatable">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Car</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Payment Method</th>
+                                    <th>Total Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if reservations %}
+                                    {% for reservation in reservations %}
+                                    <tr>
+                                        <td>
+                                            {{ reservation.user.first_name }} {{ reservation.user.last_name }}
+                                        </td>
+                            
+                                        <td>
+                                            <div>
+                                                {% if reservation.car.image %}
+                                                    <img src="{{ reservation.car.image.url }}" alt="{{ reservation.car }}" class="img-thumbnail" style="width: 80px; height: auto;">
+                                                {% else %}
+                                                    <img src="https://via.placeholder.com/80" alt="No Image" class="img-thumbnail">
+                                                {% endif %}
+                                            </div>
+                                            <div>{{ reservation.car.model }} ({{ reservation.car.year }})</div>
+                                        </td>
+                                        <td>
+                                            {{ reservation.start_date|date:"F j, Y" }}<br>
+                                            {{ reservation.start_date|date:"g:i a" }}
+                                        </td>
+                                        <td>
+                                            {{ reservation.end_date|date:"F j, Y" }}<br>
+                                            {{ reservation.end_date|date:"g:i a" }}
+                                        </td>
+                                        <td>{{ reservation.get_payment_method_display }}</td>
+                                        <td>₱{{ reservation.total_cost|floatformat:2|intcomma }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">No approved reservations assigned to you</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

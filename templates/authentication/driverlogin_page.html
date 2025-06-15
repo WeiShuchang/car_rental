@@ -1,0 +1,95 @@
+{% extends "driver/driver_base.html" %}
+
+{% block content %}
+<div class="page page-center">
+  <div class="container container-tight py-4">
+ 
+    <div class="card card-md">
+      <div class="card-body">
+        <h2 class="h2 text-center mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-car-front mb-1" viewBox="0 0 16 16">
+  <path d="M4 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0m10 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0M6 8a1 1 0 0 0 0 2h4a1 1 0 1 0 0-2zM4.862 4.276 3.906 6.19a.51.51 0 0 0 .497.731c.91-.073 2.35-.17 3.597-.17s2.688.097 3.597.17a.51.51 0 0 0 .497-.731l-.956-1.913A.5.5 0 0 0 10.691 4H5.309a.5.5 0 0 0-.447.276"/>
+  <path d="M2.52 3.515A2.5 2.5 0 0 1 4.82 2h6.362c1 0 1.904.596 2.298 1.515l.792 1.848c.075.175.21.319.38.404.5.25.855.715.965 1.262l.335 1.679q.05.242.049.49v.413c0 .814-.39 1.543-1 1.997V13.5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-1.338c-1.292.048-2.745.088-4 .088s-2.708-.04-4-.088V13.5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-1.892c-.61-.454-1-1.183-1-1.997v-.413a2.5 2.5 0 0 1 .049-.49l.335-1.68c.11-.546.465-1.012.964-1.261a.8.8 0 0 0 .381-.404l.792-1.848ZM4.82 3a1.5 1.5 0 0 0-1.379.91l-.792 1.847a1.8 1.8 0 0 1-.853.904.8.8 0 0 0-.43.564L1.03 8.904a1.5 1.5 0 0 0-.03.294v.413c0 .796.62 1.448 1.408 1.484 1.555.07 3.786.155 5.592.155s4.037-.084 5.592-.155A1.48 1.48 0 0 0 15 9.611v-.413q0-.148-.03-.294l-.335-1.68a.8.8 0 0 0-.43-.563 1.8 1.8 0 0 1-.853-.904l-.792-1.848A1.5 1.5 0 0 0 11.18 3z"/>
+</svg> Driver Portal Login</h2>
+        
+        {% if messages %}
+        <div class="mb-3">
+          {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert" id="message-{{ forloop.counter }}">
+            <div class="d-flex">
+              <div>{{ message }}</div>
+            </div>
+            <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+          </div>
+          {% endfor %}
+        </div>
+        {%endif%}
+
+        
+        <form method="post" autocomplete="off">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" name="username" class="form-control" placeholder="Enter username" autocomplete="off" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">
+              Password
+          
+            </label>
+            <div class="input-group input-group-flat">
+              <input type="password" name="password" class="form-control" placeholder="Your password" autocomplete="off" required>
+              <span class="input-group-text">
+             
+              </span>
+            </div>
+          </div>
+          <div class="mb-2">
+        
+          </div>
+          <div class="form-footer">
+            <button type="submit" class="btn btn-primary w-100">Sign in</button>
+          </div>
+        </form>
+      </div>
+     
+    </div>
+
+  </div>
+</div>
+
+<style>
+  body {
+    background-image: url('https://source.unsplash.com/random/1920x1080/?admin,security');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+  }
+  .card {
+    border-radius: 10px;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+    background-color: rgba(255, 255, 255, 0.85);
+  }
+  .navbar-brand {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Get all message alerts
+  var messageAlerts = document.querySelectorAll('[id^="message-"]');
+  
+  // Set timeout for each alert
+  messageAlerts.forEach(function(alert) {
+    setTimeout(function() {
+      // Create a Bootstrap alert instance and close it
+      var bsAlert = new bootstrap.Alert(alert);
+      bsAlert.close();
+    }, 4000); // 4000 milliseconds = 4 seconds
+  });
+});
+</script>
+{% endblock content %}

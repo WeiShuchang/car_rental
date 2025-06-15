@@ -4,6 +4,7 @@ from django.utils.timezone import now
 from datetime import timedelta
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.contrib.auth import get_user_model
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -11,6 +12,7 @@ class UserProfile(models.Model):
         ('user', 'User'),
         ('driver', 'Driver'),
         ('admin', 'Admin'),
+        ('superadmin', 'SuperAdmin'),
     )
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
     contact_number = models.CharField(max_length=15, blank=True, null=True)  # New field
@@ -50,6 +52,7 @@ class Driver(models.Model):
             availability=True  # Default to available
         )
         return driver
+    
 class Car(models.Model):
     BODY_TYPES = (
         ('sedan', 'Sedan'),
@@ -57,6 +60,7 @@ class Car(models.Model):
         ('truck', 'Truck'),
         ('van', 'Van'),
         ('bus', 'Bus'),
+        ('coupe', 'Coupe'),
     )
     
     brand = models.CharField(max_length=50)
@@ -109,6 +113,34 @@ class Reservation(models.Model):
     is_approved_notif = models.BooleanField(default=False)
     reason_for_cancelling = models.TextField(blank=True, null=True)
     cancelled_by = models.CharField(max_length=10, choices=CANCELLED_BY_CHOICES, blank=True, null=True)
+    date_completed = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Reservation {self.id} - {self.car} by {self.user.username} (₱{self.total_cost}) - {self.get_payment_status_display()}"
+
+User = get_user_model()
+
+class ChatRoom(models.Model):
+    reservation = models.OneToOneField('Reservation', on_delete=models.CASCADE, related_name='chat_room')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return f"Chat for Reservation #{self.reservation.id}"
+
+class Message(models.Model):
+    chat_room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['timestamp']
+
+    def __str__(self):
+        return f"Message from {self.sender} at {self.timestamp}"
