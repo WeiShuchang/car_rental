@@ -142,7 +142,7 @@ def driver_completed_reservations(request):
     reservations = Reservation.objects.filter(
         driver__user=request.user,
         status='completed'
-    ).order_by('-end_date')  # Newest first
+    ).order_by('-id')  # Newest first
     
     return render(request, 'driver/driver_completed_reservations.html', {
         'reservations': reservations

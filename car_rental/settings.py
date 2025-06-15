@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'user',
     'driver',
     'channels',
+    'superadmin',
 ]
 
 MIDDLEWARE = [
@@ -46,6 +47,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'administrator.middleware.UnauthorizedUserMiddleware',
+    'administrator.middleware.AuthorizedUserMiddleware',
+    'administrator.middleware.RoleBasedAccessMiddleware',
+    'administrator.middleware.PreventBackHistoryMiddleware',
 ]
 
 # Configure ASGI application

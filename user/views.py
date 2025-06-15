@@ -27,50 +27,57 @@ def car_detail(request, plate_number):
     car = get_object_or_404(Car, plate_number=plate_number)
     return render(request, 'user/car_detail.html', {'car': car})
 
+
 @login_required
 def rent_car(request, plate_number):
     car = get_object_or_404(Car, plate_number=plate_number)
 
-    if request.method == 'POST':
-        start_date = request.POST.get('start_date')
-        end_date = request.POST.get('end_date')
-        payment_method = request.POST.get('payment_method')
+    if request.method == "POST":
+        # pull raw strings
+        start_str = request.POST.get("start_date")
+        end_str   = request.POST.get("end_date")
+        payment   = request.POST.get("payment_method")
 
-        # Convert to datetime objects (ensure they are timezone-aware)
-        start_date = make_aware(parse_datetime(start_date)) if start_date else None
-        end_date = make_aware(parse_datetime(end_date)) if end_date else None
+        # convert → aware datetimes
+        start_dt = make_aware(parse_datetime(start_str)) if start_str else None
+        end_dt   = make_aware(parse_datetime(end_str))   if end_str   else None
 
-        if not start_date or not end_date:
+        if not start_dt or not end_dt:
             messages.error(request, "Please select valid start and end dates.")
-            return redirect('car_detail', plate_number=plate_number)
+            return redirect("car_detail", plate_number=plate_number)
 
-        if start_date >= end_date:
+        if start_dt >= end_dt:
             messages.error(request, "End date must be after start date.")
-            return redirect('car_detail', plate_number=plate_number)
+            return redirect("car_detail", plate_number=plate_number)
 
-        # Compute rental duration (ensure at least 1 day is counted)
-        if start_date.date() == end_date.date():
-            rental_days = 1  # If same date, count as 1 day
-        else:
-            rental_days = (end_date - start_date).days
+        # ---- rental‑day logic --------------------------------------------
+        # Compare only the calendar dates, not the hours/minutes.
+        day_diff = (end_dt.date() - start_dt.date()).days
+        rental_days = day_diff or 1          # at least one day
+        # -------------------------------------------------------------------
 
-        # Compute total cost
         total_cost = rental_days * car.price_per_day
 
-        # Save the reservation
-        reservation = Reservation.objects.create(
+        Reservation.objects.create(
             user=request.user,
             car=car,
-            start_date=start_date,
-            end_date=end_date,
-            payment_method=payment_method,
-            total_cost=total_cost
+            start_date=start_dt,
+            end_date=end_dt,
+            payment_method=payment,
+            total_cost=total_cost,
+            # rental_days=rental_days,        # ↯ keep if you have this field
         )
 
-        messages.success(request, f"Car reserved successfully! Please wait for the administrator to approve reservation. Total cost: ₱{total_cost:.2f}")
-        return redirect('user_pending_reservations')
+        messages.success(
+            request,
+            f"Car reserved successfully! "
+            f"Please wait for the administrator to approve the reservation. "
+            f"Total cost: ₱{total_cost:,.2f}"
+        )
+        return redirect("user_pending_reservations")
 
-    return redirect('car_detail', plate_number=plate_number)
+    # GET fallback
+    return redirect("car_detail", plate_number=plate_number)
 
 @login_required
 def pending_reservations(request):

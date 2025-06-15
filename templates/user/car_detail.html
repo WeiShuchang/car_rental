@@ -220,6 +220,8 @@
                         </div>
                     </div>
 
+                   <input type="hidden" name="calculated_days" id="calculated_days" value="0">
+                    <input type="hidden" name="calculated_total" id="calculated_total" value="0.00">
                     <!-- Start and End Date (Two-Column Layout) -->
                     <div class="row">
                         <div class="col-md-6">
@@ -231,7 +233,7 @@
                             <input type="datetime-local" class="form-control form-control-sm date-input" name="end_date" id="end_date" required>
                         </div>
                     </div>
-
+                   
                     <!-- Payment Method -->
                     <div class="mb-3 mt-1">
                         <label for="payment_method" class="form-label small">Payment Method</label>
@@ -245,7 +247,7 @@
                     <div class="alert alert-info small" id="rental_summary">
                         <strong>Rental Summary:</strong>
                         <p>Rental Duration: <span id="rental_days">0</span> day(s)</p>
-                        <p>Total Cost: <strong>₱<span id="total_cost">0.00</span></strong></p>
+                        <p>Total Cost: <strong><span id="total_cost">0.00</span></strong></p>
                         <p><em>For a <span id="rental_days_text">0-day</span> rental, you will be charged ₱<span id="total_cost_text">0.00</span>.</em></p>
                     </div>
                 </div>
@@ -258,49 +260,89 @@
         </div>
     </div>
 </div>
+
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const startDateInput = document.getElementById("start_date");
-        const endDateInput = document.getElementById("end_date");
-        const rentalDaysText = document.getElementById("rental_days");
-        const totalCostText = document.getElementById("total_cost");
-        const rentalDaysHumanized = document.getElementById("rental_days_text");
-        const totalCostHumanized = document.getElementById("total_cost_text");
-    
-        function updateRentalSummary() {
-            const pricePerDay = parseFloat("{{ car.price_per_day }}");
-            const startDate = new Date(startDateInput.value);
-            const endDate = new Date(endDateInput.value);
+document.addEventListener("DOMContentLoaded", function () {
+    const startDateInput = document.getElementById("start_date");
+    const endDateInput = document.getElementById("end_date");
+    const rentalDaysText = document.getElementById("rental_days");
+    const totalCostText = document.getElementById("total_cost");
+    const rentalDaysHumanized = document.getElementById("rental_days_text");
+    const totalCostHumanized = document.getElementById("total_cost_text");
+
+    function updateRentalSummary() {
+        const pricePerDay = parseFloat("{{ car.price_per_day }}");
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        
+        if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && endDate >= startDate) {
+            // Calculate difference in days (matching backend logic)
+            const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+            const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
             
-            if (!isNaN(startDate) && !isNaN(endDate) && endDate >= startDate) {
-                const startDay = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-                const endDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-                const diffTime = endDay - startDay;
-                let days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                
-                // Ensure at least 1 day rental even if start and end are the same day
-                if (days === 0) {
-                    days = 1;
-                }
-                
-                const totalCost = days * pricePerDay;
-    
-                rentalDaysText.textContent = days;
-                totalCostText.textContent = totalCost.toLocaleString("en-PH", { minimumFractionDigits: 2 });
-                rentalDaysHumanized.textContent = `${days}-day`;
-                totalCostHumanized.textContent = totalCost.toLocaleString("en-PH", { minimumFractionDigits: 2 });
+            let days;
+            if (startDateOnly.getTime() === endDateOnly.getTime()) {
+                days = 1; // Same day counts as 1 day
             } else {
-                rentalDaysText.textContent = "0";
-                totalCostText.textContent = "0.00";
-                rentalDaysHumanized.textContent = "0-day";
-                totalCostHumanized.textContent = "0.00";
+                const diffTime = endDateOnly - startDateOnly;
+                days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            }
+            
+            const totalCost = days * pricePerDay;
+
+            // Update visible text
+            rentalDaysText.textContent = days;
+            totalCostText.textContent = totalCost.toLocaleString("en-PH", { 
+                style: "currency", 
+                currency: "PHP",
+                minimumFractionDigits: 2 
+            });
+            
+            rentalDaysHumanized.textContent = `${days}-day`;
+            totalCostHumanized.textContent = totalCost.toLocaleString("en-PH", { 
+                style: "currency", 
+                currency: "PHP",
+                minimumFractionDigits: 2 
+            });
+            
+            // Update hidden form fields that will be submitted to backend
+            if (hiddenDaysInput) hiddenDaysInput.value = days;
+            if (hiddenTotalInput) hiddenTotalInput.value = totalCost.toFixed(2);
+        } else {
+            // Reset values if dates are invalid
+            rentalDaysText.textContent = "0";
+            totalCostText.textContent = "₱0.00";
+            rentalDaysHumanized.textContent = "0-day";
+            totalCostHumanized.textContent = "₱0.00";
+            if (hiddenDaysInput) hiddenDaysInput.value = 0;
+            if (hiddenTotalInput) hiddenTotalInput.value = "0.00";
+        }
+    }
+
+    // Date input validation and min date setting
+    function setMinDate() {
+        let now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        let minDate = now.toISOString().slice(0, 10); // Format as YYYY-MM-DD
+
+        startDateInput.min = minDate;
+        endDateInput.min = minDate;
+    }
+
+    setMinDate();
+
+    startDateInput.addEventListener("change", function () {
+        if (startDateInput.value) {
+            endDateInput.min = startDateInput.value;
+            if (endDateInput.value && endDateInput.value < startDateInput.value) {
+                endDateInput.value = startDateInput.value;
             }
         }
-    
-        startDateInput.addEventListener("change", updateRentalSummary);
-        endDateInput.addEventListener("change", updateRentalSummary);
+        updateRentalSummary();
     });
-    
+
+    endDateInput.addEventListener("change", updateRentalSummary);
+});
 </script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
