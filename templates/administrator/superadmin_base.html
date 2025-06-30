@@ -55,6 +55,8 @@
                   href="{% url 'superadmin_dashboard' %}">Home</a>
             </li>
 
+      
+
             <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'all_admins_list' %}active{% endif %}" 
                   href="{% url 'all_admins_list' %}">Administrators</a>
@@ -65,9 +67,20 @@
                   href="{% url 'all_users_list' %}">Users</a>
             </li>
 
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'all_reservations' %}active{% endif %}" 
-                  href="{% url 'all_reservations' %}">Reservations</a>
+       
+                  
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="reservationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Reservations
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="reservationsDropdown">
+                    <li><a class="dropdown-item" 
+                  href="{% url 'all_reservations' %}">All Reservations</a></li>
+                    <li><a class="dropdown-item" href="{% url 'superadmin_pending_reservations' %}">Pending</a></li>
+                    <li><a class="dropdown-item" href="{% url 'superadmin_approved_reservations' %}">Approved</a></li>
+                    <li><a class="dropdown-item" href="{% url 'superadmin_cancelled_reservations' %}">Cancelled</a></li>
+                    <li><a class="dropdown-item" href="{% url 'superadmin_completed_reservations' %}">Completed</a></li>
+                </ul>
             </li>
 
             <li class="nav-item dropdown">

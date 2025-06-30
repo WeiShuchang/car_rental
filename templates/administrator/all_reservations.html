@@ -13,6 +13,9 @@
     .badge-completed { background-color: #198754; }
     .badge-paid { background-color: #198754; }
     .badge-not-paid { background-color: #6c757d; }
+    .search-form .form-control, .search-form .form-select {
+        height: 38px;
+    }
 </style>
 
 <div class="page-wrapper">
@@ -27,157 +30,171 @@
                         All Reservations
                     </h2>
                 </div>
+                <div class="col-auto">
+                    <a href="{% url 'reservations_report' %}?{{ request.GET.urlencode }}" 
+   class="btn btn-danger">
+    <i class="fas fa-file-pdf me-2"></i>Export PDF
+</a>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="page-body container">
-        <div class="row g-2 container">
-            <div class="col-12">
-                {% for message in messages %}
-                <div class="alert 
-                    {% if message.tags == 'success' %}alert-success
-                    {% elif message.tags == 'error' %}alert-danger
-                    {% endif %} 
-                    alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                {% endfor %}
-                
-                <div class="card">
-                    <div class="table-responsive">
-                        <table class="table table-sm card-table table-vcenter text-nowrap datatable">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>User</th>
-                                    <th>Car</th>
-                                    <th>Dates</th>
-                                    <th>Driver</th>
-                                    <th>Status</th>
-                                    <th>Payment</th>
-                                    <th>Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for reservation in page_obj %}
-                                <tr>
-                                    <td>#{{ reservation.id }}</td>
-                                    <td>
-                                        {{ reservation.user.get_full_name|default:reservation.user.username }}
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            {% if reservation.car.image %}
-                                            <img src="{{ reservation.car.image.url }}" class="avatar me-2" alt="{{ reservation.car }}">
-                                            {% endif %}
-                                            <div>
-                                                {{ reservation.car.model }}
-                                                <div class="text-muted small">{{ reservation.car.plate_number }}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="text-nowrap">
-                                            {{ reservation.start_date|date:"M d" }} - {{ reservation.end_date|date:"M d" }}
-                                        </div>
-                                        <div class="text-muted small">
-                                            {{ reservation.start_date|date:"Y" }}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        {% if reservation.driver %}
-                                            {{ reservation.driver.user.get_full_name|default:reservation.driver.user.username }}
-                                        {% else %}
-                                            <span class="text-muted">Not assigned</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-{{ reservation.status }}">
-                                            {{ reservation.get_status_display }}
-                                        </span>
-                                        {% if reservation.status == 'completed' and reservation.date_completed %}
-                                        <div class="text-muted small">
-                                            {{ reservation.date_completed|date:"M d, Y" }}
-                                        </div>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <span class="badge {% if reservation.payment_status == 'paid' %}badge-paid{% else %}badge-not-paid{% endif %}">
-                                            {{ reservation.get_payment_status_display }}
-                                        </span>
-                                        <div class="text-muted small">
-                                            {{ reservation.get_payment_method_display }}
-                                        </div>
-                                    </td>
-                                    <td>₱{{ reservation.total_cost|intcomma }}</td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="8" class="text-center text-muted">No reservations found</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        <!-- Add this after the table -->
-<nav aria-label="Page navigation">
-    <ul class="pagination justify-content-center mt-3">
-        {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1" aria-label="First">
-                    <span aria-hidden="true">&laquo;&laquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-        {% else %}
-            <li class="page-item disabled">
-                <span class="page-link">&laquo;&laquo;</span>
-            </li>
-            <li class="page-item disabled">
-                <span class="page-link">&laquo;</span>
-            </li>
-        {% endif %}
-
-        {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-                <li class="page-item active">
-                    <span class="page-link">{{ num }}</span>
-                </li>
-            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                </li>
-            {% endif %}
-        {% endfor %}
-
-        {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
-                    <span aria-hidden="true">&raquo;&raquo;</span>
-                </a>
-            </li>
-        {% else %}
-            <li class="page-item disabled">
-                <span class="page-link">&raquo;</span>
-            </li>
-            <li class="page-item disabled">
-                <span class="page-link">&raquo;&raquo;</span>
-            </li>
-        {% endif %}
-    </ul>
-</nav>
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="card mb-3">
+                <div class="card-body">
+                  <form method="get" class="row g-2 search-form">
+                    <div class="col-md-3">
+                        <input type="text" name="q" class="form-control" placeholder="Search..." 
+                            value="{{ search_query|default:'' }}">
                     </div>
+                    <div class="col-md-2">
+                        <select name="status" class="form-select">
+                            <option value="">All Statuses</option>
+                            {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-2"></i>Search
+                        </button>
+                    </div>
+                    <div class="col-md-2 ms-auto">  <!-- Changed to ms-auto for right alignment -->
+                        {% if search_query or status_filter %}
+                            <a href="{% url 'all_reservations' %}" class="btn btn-outline-secondary w-100">
+                                Clear Filters
+                            </a>
+                        {% endif %}
+                    </div>
+                </form>
                 </div>
+            </div>
+
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-sm card-table table-vcenter text-nowrap datatable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Customer</th>
+                                <th>Car</th>
+                                <th>Dates</th>
+                                <th>Days</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reservation in page_obj %}
+                            <tr>
+                                <td>#{{ reservation.id }}</td>
+                                <td>
+                                    {{ reservation.user.get_full_name|default:reservation.user.username }}
+                                    {% if reservation.user.userprofile.contact_number %}
+                                        <div class="text-muted small">{{ reservation.user.userprofile.contact_number }}</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if reservation.car.image %}
+                                        <img src="{{ reservation.car.image.url }}" class="avatar me-2" alt="{{ reservation.car }}">
+                                        {% endif %}
+                                        <div>
+                                            {{ reservation.car.model }}
+                                            <div class="text-muted small">{{ reservation.car.plate_number }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-nowrap">
+                                        {{ reservation.start_date|date:"M d" }} - {{ reservation.end_date|date:"M d" }}
+                                    </div>
+                                    <div class="text-muted small">
+                                        {{ reservation.start_date|date:"Y" }}
+                                    </div>
+                                </td>
+                                <td>
+                                    {{ reservation.duration_days }}
+                                </td>
+                                <td>
+                                    <span class="badge badge-{{ reservation.status }}">
+                                        {{ reservation.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if reservation.payment_status == 'paid' %}badge-paid{% else %}badge-not-paid{% endif %}">
+                                        {{ reservation.get_payment_status_display }}
+                                    </span>
+                                    <div class="text-muted small">
+                                        {{ reservation.get_payment_method_display }}
+                                    </div>
+                                </td>
+                                <td>₱{{ reservation.total_cost|intcomma }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">
+                                    No reservations found {% if search_query or status_filter or date_filter %}with current filters{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if page_obj.paginator.num_pages > 1 %}
+                <div class="card-footer d-flex align-items-center">
+                    <p class="m-0 text-muted">
+                        Showing <span>{{ page_obj.start_index }}</span> to <span>{{ page_obj.end_index }}</span> 
+                        of <span>{{ page_obj.paginator.count }}</span> entries
+                    </p>
+                    <ul class="pagination m-0 ms-auto">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}" aria-label="First">
+                                    <span aria-hidden="true">&laquo;&laquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}" aria-label="Last">
+                                    <span aria-hidden="true">&raquo;&raquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

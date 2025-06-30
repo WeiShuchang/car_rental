@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from administrator.models import Car, Driver, Reservation, UserProfile
+from administrator.models import Car, Driver, Reservation, UserProfile, ChatRoom
 from administrator.forms import CarForm
 from django.db.models import Count
 from django.contrib import messages
@@ -10,6 +10,21 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_protect
+from django.utils import timezone
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import landscape, letter
+from reportlab.lib import colors
+from reportlab.platypus import Table, TableStyle, Paragraph, Spacer,SimpleDocTemplate
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from io import BytesIO
+from django.utils import timezone
+from reportlab.lib.units import inch
+from reportlab.lib import colors
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from django.db.models import Q
+
 # Create your views here.
 
 def superadmin_dashboard(request):
@@ -67,18 +82,51 @@ def all_admins_list(request):
 
 @login_required
 def all_reservations(request):
+    # Get search and filter parameters from request
+    search_query = request.GET.get('q', '')
+    status_filter = request.GET.get('status', '')
+    payment_filter = request.GET.get('payment', '')
+    
+    # Start with base queryset
     reservations_list = Reservation.objects.all().select_related(
         'user', 'car', 'driver', 'driver__user'
     ).order_by('-created_at')
     
-    paginator = Paginator(reservations_list, 10)  # Show 10 reservations per page
+    # Apply search filter if provided
+    if search_query:
+        reservations_list = reservations_list.filter(
+            Q(user__first_name__icontains=search_query) |
+            Q(user__last_name__icontains=search_query) |
+            Q(car__model__icontains=search_query) |
+            Q(car__plate_number__icontains=search_query) |
+            Q(id__icontains=search_query)
+        )
+    
+    # Apply status filter if provided
+    if status_filter:
+        reservations_list = reservations_list.filter(status=status_filter)
+    
+    # Apply payment status filter if provided
+    if payment_filter:
+        reservations_list = reservations_list.filter(payment_status=payment_filter)
+    
+    # Pagination (25 items per page)
+    paginator = Paginator(reservations_list, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'administrator/all_reservations.html', {
+    context = {
         'page_obj': page_obj,
-        'reservations': page_obj.object_list  # Add this line
-    })
+        'reservations': page_obj.object_list,
+        'search_query': search_query,
+        'status_filter': status_filter,
+        'payment_filter': payment_filter,
+        'status_choices': Reservation.STATUS_CHOICES,
+        'payment_choices': Reservation.PAYMENT_STATUS_CHOICES,
+    }
+    
+    return render(request, 'administrator/all_reservations.html', context)
+
 def add_admin(request):
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -304,3 +352,279 @@ def update_driver(request, driver_id):
         return redirect("driver_list")
 
     return render(request, "administrator/driver_list.html", {"driver": driver})
+
+
+def pending_reservations(request):
+    reservations = Reservation.objects.filter(status='pending').select_related('car', 'user')
+    drivers = Driver.objects.filter(availability=True).select_related('user')  # Get only available drivers
+
+    return render(request, 'superadmin/pending_reservations.html', {
+        'reservations': reservations,
+        'drivers': drivers
+    })
+
+
+def approve_reservation(request, reservation_id):
+    if request.method == "POST":
+        driver_id = request.POST.get("driver")
+
+        # Validate reservation
+        reservation = get_object_or_404(Reservation, id=reservation_id)
+
+        # Check if already approved
+        if reservation.status == "approved":
+            messages.warning(request, "This reservation has already been approved.")
+            return redirect("superadmin_pending_reservations")
+
+        # Validate driver
+        if driver_id:
+            driver = Driver.objects.filter(id=driver_id, availability=True).first()
+            if not driver:
+                messages.error(request, "Invalid driver selection or driver is unavailable.")
+                return redirect("superadmin_pending_reservations")
+
+            # Assign driver & update availability
+            reservation.driver = driver
+            driver.save()
+
+        # Approve reservation
+        reservation.status = "approved"
+        reservation.save()
+
+        # Create chat room for this reservation if it doesn't exist
+        if not hasattr(reservation, 'chat_room'):
+            ChatRoom.objects.create(reservation=reservation)
+
+        messages.success(request, "Reservation approved successfully!")
+        return redirect("superadmin_pending_reservations")
+
+    messages.error(request, "Invalid request method.")
+    return redirect("superadmin_pending_reservations")
+
+
+def cancel_reservation(request):
+    if request.method == "POST":
+        print("Form submitted!")  # Debugging
+        print("POST data:", request.POST)  # Debugging
+        
+        reservation_id = request.POST.get("reservation_id")
+        reason = request.POST.get("reason_for_cancelling")
+        cancelled_by = request.POST.get("cancelled_by")
+
+        try:
+            reservation = Reservation.objects.get(id=reservation_id)
+            print("Found reservation:", reservation)  # Debugging
+            
+            if reservation.status == "pending":
+                reservation.status = "cancelled"
+                reservation.reason_for_cancelling = reason
+                reservation.cancelled_by = cancelled_by
+                reservation.is_cancelled_notif = True
+                reservation.save()
+                print("Reservation cancelled successfully")  # Debugging
+                messages.success(request, "Reservation has been cancelled successfully.")
+            else:
+                messages.error(request, "This reservation cannot be cancelled.")
+                
+        except Reservation.DoesNotExist:
+            messages.error(request, "Reservation not found.")
+        except Exception as e:
+            messages.error(request, f"An error occurred: {str(e)}")
+            print("Error:", str(e))  # Debugging
+
+    return redirect("superadmin_pending_reservations")
+
+def approved_reservations(request):
+    reservations = Reservation.objects.filter(status='approved').select_related('user', 'car', 'driver').order_by("-id")
+    return render(request, 'superadmin/approved_reservations.html', {'reservations': reservations})
+
+def cancelled_reservations(request):
+    reservations = Reservation.objects.filter(status='cancelled').select_related('user', 'car', 'driver').order_by("-id")
+    return render(request, 'superadmin/cancelled_reservations.html', {'reservations': reservations})
+
+
+def complete_reservation(request, reservation_id):
+    reservation = get_object_or_404(Reservation, id=reservation_id)
+    
+    if request.method == "POST":
+        # Check if reservation is already completed
+        if reservation.status == 'completed':
+            messages.warning(request, "This reservation is already completed.")
+            return redirect('superadmin_approved_reservations')  # Or your appropriate redirect
+        
+        # Validate that reservation is in an approvable state
+        if reservation.status != 'approved':
+            messages.error(request, "Only approved reservations can be marked as completed.")
+            return redirect('superadmin_approved_reservations')
+            
+        try:
+            # Update reservation status and set completion timestamp
+            reservation.status = 'completed'
+            reservation.date_completed = timezone.now()
+            
+            # Free up the driver if one was assigned
+            if reservation.driver:
+                reservation.driver.availability = True
+                reservation.driver.save()
+                
+            reservation.save()
+            
+            messages.success(request, f"Reservation #{reservation.id} successfully marked as completed.")
+        except Exception as e:
+            messages.error(request, f"Error completing reservation: {str(e)}")
+            # Consider logging the error here as well
+    
+    return redirect('superadmin_approved_reservations')  # Adjust to your actual URL name
+
+@login_required
+def completed_reservations(request):
+    reservations = Reservation.objects.filter(status='completed').order_by('-end_date')
+    
+    context = {
+        'reservations': reservations,
+    }
+    return render(request, 'superadmin/completed_reservations.html', context)
+
+def update_payment_status(request, reservation_id):
+    if request.method == 'POST':
+        reservation = get_object_or_404(Reservation, id=reservation_id)
+        new_status = request.POST.get('payment_status')
+        
+        # Validate the status
+        if new_status in dict(Reservation.PAYMENT_STATUS_CHOICES).keys():
+            reservation.payment_status = new_status
+            reservation.save()
+            messages.success(request, 'Payment status updated successfully!')
+        else:
+            messages.error(request, 'Invalid payment status selected.')
+            
+    return redirect('superadmin_pending_reservations')  # Replace with your actual redirect target
+
+def generate_reservations_pdf(request):
+    # Get search and filter parameters
+    search_query = request.GET.get('q', '')
+    status_filter = request.GET.get('status', '')
+    payment_filter = request.GET.get('payment', '')
+
+    # Get filtered reservations
+    reservations = Reservation.objects.all().select_related(
+        'user', 'car', 'driver', 'driver__user'
+    ).order_by('-created_at')
+
+    if search_query:
+        reservations = reservations.filter(
+            Q(user__first_name__icontains=search_query) |
+            Q(user__last_name__icontains=search_query) |
+            Q(car__model__icontains=search_query) |
+            Q(car__plate_number__icontains=search_query)
+        )
+
+    if status_filter:
+        reservations = reservations.filter(status=status_filter)
+
+    if payment_filter:
+        reservations = reservations.filter(payment_status=payment_filter)
+
+    # Create PDF response
+    response = HttpResponse(content_type='application/pdf')
+    filename = f"reservations_report_{timezone.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(letter),
+                         leftMargin=0.5*inch,
+                         rightMargin=0.5*inch,
+                         topMargin=0.5*inch,
+                         bottomMargin=0.5*inch)
+
+    elements = []
+    styles = getSampleStyleSheet()
+
+    # Title with filters
+    title_text = "Ashley's Car Rental - Reservations Report"
+    filter_info = []
+    
+    if search_query:
+        filter_info.append(f"Search: {search_query}")
+    if status_filter:
+        status_display = dict(Reservation.STATUS_CHOICES).get(status_filter, status_filter)
+        filter_info.append(f"Status: {status_display}")
+    if payment_filter:
+        payment_display = dict(Reservation.PAYMENT_STATUS_CHOICES).get(payment_filter, payment_filter)
+        filter_info.append(f"Payment: {payment_display}")
+
+    # Add title and filters
+    elements.append(Paragraph(title_text, styles['Heading1']))
+    if filter_info:
+        elements.append(Paragraph("<br/>".join(filter_info), styles['Normal']))
+    elements.append(Paragraph(f"Generated on: {timezone.now().strftime('%B %d, %Y at %I:%M %p')}", styles['Normal']))
+    elements.append(Spacer(1, 0.3*inch))
+
+    # Table data with removed contact column and PHP instead of ₱
+    table_data = [
+        ["ID", "Customer", "Car Model", "Plate #", 
+         "Reservation Dates", "Days", "Status", "Payment", "Total (PHP)"]
+    ]
+
+    for reservation in reservations:        
+        table_data.append([
+            str(reservation.id),
+            reservation.user.get_full_name() or reservation.user.username,
+            reservation.car.model,
+            reservation.car.plate_number,
+            f"{reservation.start_date.strftime('%b %d, %Y')} to {reservation.end_date.strftime('%b %d, %Y')}",
+            str((reservation.end_date - reservation.start_date).days + 1),
+            reservation.get_status_display(),
+            f"{reservation.get_payment_status_display()} ({reservation.get_payment_method_display()})",
+            "PHP {:,.2f}".format(reservation.total_cost)  # Changed to PHP
+        ])
+
+    # Create table with adjusted column widths
+    col_widths = [
+        0.5*inch,   # ID
+        1.5*inch,   # Customer
+        1.8*inch,   # Car Model
+        0.8*inch,   # Plate #
+        1.8*inch,   # Dates
+        0.5*inch,   # Days
+        0.8*inch,   # Status
+        1.2*inch,   # Payment
+        1.0*inch    # Total
+    ]
+    
+    table = Table(table_data, colWidths=col_widths, repeatRows=1)
+    
+    # Table style
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#343a40')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,0), 9),
+        ('BOTTOMPADDING', (0,0), (-1,0), 8),
+        ('BACKGROUND', (0,1), (-1,-1), colors.HexColor('#f8f9fa')),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#dee2e6')),
+        ('FONTSIZE', (0,1), (-1,-1), 8),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+    ]))
+
+    elements.append(table)
+    elements.append(Spacer(1, 0.3*inch))
+
+    # Summary section with PHP
+    total_revenue = sum(r.total_cost for r in reservations)
+    summary_text = f"""
+    <b>SUMMARY</b><br/>
+    Total Reservations: {len(reservations)}<br/>
+    Total Revenue: PHP {total_revenue:,.2f}<br/>
+    Generated by: {request.user.get_full_name() or request.user.username}
+    """
+    elements.append(Paragraph(summary_text, styles['Normal']))
+
+    # Build PDF
+    doc.build(elements)
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.write(pdf)
+    return response

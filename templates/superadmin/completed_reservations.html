@@ -1,0 +1,160 @@
+{% extends "administrator/superadmin_base.html" %}
+{% load humanize %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header d-print-none mb-2">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <div class="page-pretitle">
+                        Ashley's Car Rental
+                    </div>
+                    <h2 class="page-title">
+                        Completed Travels
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body container">
+        <div class="row g-2 container">
+            <div class="col-12">
+                {% for message in messages %}
+                <div class="alert 
+                    {% if message.tags == 'success' %}alert-success
+                    {% elif message.tags == 'error' %}alert-danger
+                    {% elif message.tags == 'warning' %}alert-warning
+                    {% endif %} 
+                    alert-dismissible fade show" role="alert">
+                    {{ message|linebreaksbr }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-sm card-table table-vcenter text-nowrap datatable">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Car</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Driver</th>
+                                    <th>Payment Method</th>
+                                    <th>Payment Status</th>
+                                    <th>Total Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if reservations %}
+                                    {% for reservation in reservations %}
+                                    <tr>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-secondary " 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#userProfileModal"
+                                                data-user-id="{{ reservation.user.id }}"
+                                                data-first-name="{{ reservation.user.first_name }}"
+                                                data-last-name="{{ reservation.user.last_name }}"
+                                                data-email="{{ reservation.user.email }}"
+                                                data-role="{{ reservation.user.userprofile.role|title }}"
+                                                data-contact="{{ reservation.user.userprofile.contact_number|default:'Not provided' }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person" viewBox="0 0 16 16">
+                                                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
+                                                </svg>
+                                            {{ reservation.user.first_name }} {{ reservation.user.last_name }}
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                {% if reservation.car.image %}
+                                                    <img src="{{ reservation.car.image.url }}" alt="{{ reservation.car }}" class="img-thumbnail" style="width: 80px; height: auto;">
+                                                {% else %}
+                                                    <img src="https://via.placeholder.com/80" alt="No Image" class="img-thumbnail">
+                                                {% endif %}
+                                            </div>
+                                            <div>{{ reservation.car.model }} ({{ reservation.car.year }})</div>
+                                        </td>
+                                        <td>{{ reservation.start_date|date:"F j, Y" }}<br>{{ reservation.start_date|date:"g:i a" }}</td>
+                                        <td>{{ reservation.end_date|date:"F j, Y" }}<br>{{ reservation.end_date|date:"g:i a" }}</td>
+                                        
+                                        <td>{{ reservation.driver.user.get_full_name|default:"N/A" }}</td>
+                                        <td>{{ reservation.get_payment_method_display }}</td>
+                                        <td>
+                                            {% if reservation.payment_status == "paid" %}
+                                                <span class="text-muted">Paid</span>
+                                            {% else %}
+                                                <span class="text-muted">Not Paid Yet</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>₱{{ reservation.total_cost|floatformat:2|intcomma }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted">No completed travels</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+  <!-- User Profile Modal -->
+  <div class="modal fade" id="userProfileModal" tabindex="-1" aria-labelledby="userProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userProfileModalLabel">User Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Full Name:</div>
+                    <div class="col-md-8" id="modal-full-name"></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Email:</div>
+                    <div class="col-md-8" id="modal-email"></div>
+                </div>
+            
+            
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var userProfileModal = document.getElementById('userProfileModal');
+        userProfileModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            
+            // Extract info from data-* attributes
+            var firstName = button.getAttribute('data-first-name');
+            var lastName = button.getAttribute('data-last-name');
+            var email = button.getAttribute('data-email');
+  
+            var contact = button.getAttribute('data-contact');
+            
+            // Update the modal's content
+            document.getElementById('modal-full-name').textContent = firstName + ' ' + lastName;
+            document.getElementById('modal-email').textContent = email;
+
+            document.getElementById('modal-contact').textContent = contact;
+        });
+    });
+</script>
+{% endblock %}
