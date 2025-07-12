@@ -1,0 +1,22 @@
+<!-- templates/authentication/verify_email.html -->
+{% extends 'base.html' %}  <!-- Optional: if you have a base template -->
+{% block content %}
+<h2>Verify Your Email</h2>
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+<form method="POST">
+    {% csrf_token %}
+    <div>
+        <label for="email">Email:</label>
+        <input type="email" name="email" required>
+    </div>
+    <div>
+        <label for="verification_code">Verification Code:</label>
+        <input type="text" name="verification_code" required>
+    </div>
+    <button type="submit">Verify</button>
+</form>
+{% endblock %}

@@ -276,6 +276,7 @@
                                 <option value="suv" {% if form.body_type.value == "suv" %}selected{% endif %}>SUV</option>
                                 <option value="truck" {% if form.body_type.value == "truck" %}selected{% endif %}>Truck</option>
                                 <option value="coupe" {% if form.body_type.value == "coupe" %}selected{% endif %}>Coupe</option>
+                                <option value="van" {% if form.body_type.value == "van" %}selected{% endif %}>Van</option>
                             </select>
                             <div class="invalid-feedback">{{ form.body_type.errors|first }}</div>
                         </div>

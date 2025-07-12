@@ -15,7 +15,9 @@ class UserProfile(models.Model):
         ('superadmin', 'SuperAdmin'),
     )
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
-    contact_number = models.CharField(max_length=15, blank=True, null=True)  # New field
+    contact_number = models.CharField(max_length=20, blank=True, null=True)
+    is_email_confirmed = models.BooleanField(default=False)  # New field
+    email_confirmation_token = models.CharField(max_length=100, blank=True, null=True)  # For confirmation link
 
     def __str__(self):
         return self.user.username
@@ -91,6 +93,7 @@ class Reservation(models.Model):
     PAYMENT_STATUS_CHOICES = (
         ('not_paid', 'Not Paid Yet'),
         ('paid', 'Paid'),
+         ('partially_paid', 'Partially Paid'),
     )
 
     CANCELLED_BY_CHOICES = (
@@ -106,7 +109,7 @@ class Reservation(models.Model):
     payment_method = models.CharField(max_length=10, choices=PAYMENT_CHOICES, default='onsite')
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     total_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default='not_paid')
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='not_paid')
 
     # New fields
     is_cancelled_notif = models.BooleanField(default=False)

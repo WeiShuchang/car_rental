@@ -1,11 +1,11 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from administrator.forms import CarForm, DriverForm, SignUpForm
 from django.contrib import messages
 from administrator.models import UserProfile, Car, ChatRoom, Message
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
-
+from django.contrib.auth.models import User
 
 def homepage(request):
     featured_cars = Car.objects.filter(available=True)[:6]  # Fetch only available cars, limit to 6
@@ -13,20 +13,57 @@ def homepage(request):
 
 def signup_view(request):
     if request.method == "POST":
-        form = SignUpForm(request.POST)
+        form = SignUpForm(request.POST)  # Only one instance needed
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            messages.success(request, "Signup successful!")
-            return redirect('user_dashboard')
+            user = form.save()  # This will send the email automatically
+            messages.success(request, "Registration successful! Please check your email to confirm your account.")
+            return redirect('login')
         else:
-            # Add this for debugging:
-            print(form.errors)  # Check console for errors
+            print(form.errors)  # Debugging: Check form errors in console
             messages.error(request, "Signup failed. Please check the form.")
     else:
         form = SignUpForm()
     
     return render(request, 'authentication/signup_page.html', {'form': form})
+
+def verify_email_view(request):
+    if request.method == "POST":
+        email = request.POST.get('email')
+        verification_code = request.POST.get('verification_code')
+        
+        try:
+            user = User.objects.get(email=email)
+            profile = UserProfile.objects.get(user=user)
+            
+            if profile.email_verification_code == verification_code:
+                # Update is_email_confirmed instead of user.is_active
+                profile.is_email_confirmed = True
+                profile.save()
+                messages.success(request, "Email verified! You can now log in.")
+                return redirect('login')
+            else:
+                messages.error(request, "Invalid verification code.")
+        except User.DoesNotExist:
+            messages.error(request, "User not found.")
+        except UserProfile.DoesNotExist:
+            messages.error(request, "User profile not found.")
+    
+    return render(request, 'authentication/verify_email.html')
+
+
+def confirm_email_view(request, token):
+    profile = get_object_or_404(UserProfile, email_confirmation_token=token)
+    if not profile.is_email_confirmed:
+        profile.is_email_confirmed = True
+        profile.email_confirmation_token = None  # Clear the token after use
+        profile.save()
+        profile.user.is_active = True  # Activate the user
+        profile.user.save()
+        messages.success(request, "Email confirmed successfully! You can now login.")
+    else:
+        messages.info(request, "Email already confirmed.")
+    
+    return redirect('login')
 
 def login_view(request):
     if request.method == "POST":

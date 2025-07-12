@@ -12,7 +12,9 @@
     .badge-cancelled { background-color: #dc3545; }
     .badge-completed { background-color: #198754; }
     .badge-paid { background-color: #198754; }
-    .badge-not-paid { background-color: #6c757d; }
+    .badge-not-paid { background-color: #6c757d;
+    }
+    .badge-partially-paid { background-color: #ffc107; color:black;}
     .search-form .form-control, .search-form .form-select {
         height: 38px;
     }
@@ -128,7 +130,7 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge {% if reservation.payment_status == 'paid' %}badge-paid{% else %}badge-not-paid{% endif %}">
+                                    <span class="badge {% if reservation.payment_status == 'paid' %}badge-paid {% elif reservation.payment_status == 'partially_paid' %}badge-partially-paid {% else %}badge-not-paid{% endif %}">
                                         {{ reservation.get_payment_status_display }}
                                     </span>
                                     <div class="text-muted small">

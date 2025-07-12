@@ -239,7 +239,7 @@
                         <label for="payment_method" class="form-label small">Payment Method</label>
                         <select class="form-select form-select-sm" name="payment_method" required>
                             <option value="onsite">Onsite</option>
-                            <option value="gcash" disabled>GCash</option>
+                            <option value="gcash" >GCash</option>
                         </select>
                     </div>
 
@@ -365,6 +365,26 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 </script>
-
-
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentMethod = document.querySelector('select[name="payment_method"]');
+    const qrContainer = document.createElement('div');
+    qrContainer.id = 'gcash-qr-container';
+    qrContainer.style.display = 'none';
+    qrContainer.style.margin = '10px 0';
+    qrContainer.style.textAlign = 'center';
+    
+    qrContainer.innerHTML = `
+        <p style="font-size:12px; margin-bottom:8px;">Scan QR to pay via GCash</p>
+        <img src="{% static "qr_for_car_rental.jpg" %}" alt="GCash QR" style="width:150px;">
+        <p style="font-size:12px; margin-top:8px;">Send to: 09XX-XXX-XXXX</p>
+    `;
+    
+    paymentMethod.parentNode.insertBefore(qrContainer, paymentMethod.nextSibling);
+    
+    paymentMethod.addEventListener('change', function() {
+        qrContainer.style.display = this.value === 'gcash' ? 'block' : 'none';
+    });
+});
+</script>
 {% endblock %}

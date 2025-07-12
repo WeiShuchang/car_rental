@@ -91,13 +91,15 @@
                                     
                                         <td>₱{{ reservation.total_cost|floatformat:2|intcomma }}</td>
                                         <td>
-                                            <button class="btn btn-sm {% if reservation.payment_status == 'paid' %}btn-success{% else %}btn-warning{% endif %} edit-payment-status"
+                                            <button class="btn btn-sm {% if reservation.payment_status == 'paid' %}btn-success{% elif reservation.payment_status == 'partially_paid'  %}btn-warning {% else %} btn-danger {% endif %} edit-payment-status"
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#editPaymentModal"
                                                 data-reservation-id="{{ reservation.id }}"
                                                 data-current-status="{{ reservation.payment_status }}">
                                                 {% if reservation.payment_status == "paid" %}
                                                     Paid
+                                                {% elif reservation.payment_status == "partially_paid" %}
+                                                    Partially Paid
                                                 {% else %}
                                                     Not Paid Yet
                                                 {% endif %}
@@ -284,7 +286,9 @@
                         <label for="paymentStatusSelect" class="form-label">Payment Status</label>
                         <select class="form-select" id="paymentStatusSelect" name="payment_status" required>
                             <option value="not_paid">Not Paid Yet</option>
+                            <option value="partially_paid">Partially Paid</option>
                             <option value="paid">Paid</option>
+
                         </select>
                     </div>
                 </form>

@@ -44,6 +44,8 @@ urlpatterns = [
     #other accessible links for every user type:
     path('messages/', views.chat_messages, name='chat_messages'),
     path('send/', views.send_chat_message, name='send_chat_message'),
+    path('confirm-email/<str:token>/', views.confirm_email_view, name='confirm-email'),
+    path('verify-email/', views.verify_email_view, name='verify-email'),
 
 ]
 
