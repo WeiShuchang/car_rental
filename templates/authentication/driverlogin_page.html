@@ -1,6 +1,7 @@
 {% extends "driver/driver_base.html" %}
 
 {% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <div class="page page-center">
   <div class="container container-tight py-4">
  
@@ -24,40 +25,69 @@
         </div>
         {%endif%}
 
-        
+                
         <form method="post" autocomplete="off">
-          {% csrf_token %}
-          <div class="mb-3">
-            <label class="form-label">Username</label>
-            <input type="text" name="username" class="form-control" placeholder="Enter username" autocomplete="off" required>
-          </div>
-          <div class="mb-2">
-            <label class="form-label">
-              Password
-          
-            </label>
-            <div class="input-group input-group-flat">
-              <input type="password" name="password" class="form-control" placeholder="Your password" autocomplete="off" required>
-              <span class="input-group-text">
-             
-              </span>
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input type="text" name="username" class="form-control" placeholder="Enter username" autocomplete="off" required>
             </div>
-          </div>
-          <div class="mb-2">
-        
-          </div>
-          <div class="form-footer">
-            <button type="submit" class="btn btn-primary w-100">Sign in</button>
-          </div>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <div class="input-group input-group-flat">
+                    <input type="password" name="password" id="password" class="form-control" placeholder="Your password" autocomplete="off" required>
+                    <span class="input-group-text bg-transparent px-3" style="cursor: pointer; border-left: 0;">
+                        <i class="fas fa-eye toggle-password" id="togglePassword" style="color: #6c757d;"></i>
+                    </span>
+                </div>
+            </div>
+            <div class="form-footer">
+                <button type="submit" class="btn btn-primary w-100">Sign in</button>
+            </div>
         </form>
+
       </div>
      
     </div>
 
   </div>
-</div>
+</div><script>
+document.addEventListener('DOMContentLoaded', function() {
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    
+    togglePassword.addEventListener('click', function() {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        this.classList.toggle('fa-eye');
+        this.classList.toggle('fa-eye-slash');
+        this.style.color = type === 'password' ? '#6c757d' : '#3b7ddd';
+    });
+    
+    // Ensure icon stays visible
+    passwordInput.addEventListener('focus', function() {
+        togglePassword.style.visibility = 'visible';
+    });
+});
+</script>
 
 <style>
+/* AdminLTE-style password toggle */
+.toggle-password {
+    transition: all 0.2s ease;
+}
+.toggle-password:hover {
+    color: #3b7ddd !important;
+}
+.input-group-flat .form-control {
+    border-right: 0;
+}
+.input-group-flat .input-group-text {
+    background-color: transparent;
+    border-left: 0;
+}
+
+
   body {
     background-image: url('https://source.unsplash.com/random/1920x1080/?admin,security');
     background-size: cover;

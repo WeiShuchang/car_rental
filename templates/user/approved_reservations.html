@@ -1,5 +1,6 @@
 {% extends 'user/base.html' %}
 {% load humanize %}
+{% load static %}
 
 {% block content %}
 <style>
@@ -106,10 +107,10 @@
                                     <span class="text-muted">Paid</span>
                                 {% else %}
                                     <span class="text-muted">Not Paid Yet</span>
+                                    <br>
+                                    <img src="{% static 'qr_for_car_rental.jpg' %}" alt="GCash QR" style="width:100px;" class="mt-1">
                                 {% endif %}
                             </td>
-
-                         
 
                             <!-- View Button -->
                             <td>

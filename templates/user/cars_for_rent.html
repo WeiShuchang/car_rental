@@ -101,7 +101,7 @@
             </div>
         </div>
 
-        <div class="row">
+      <div class="row">
             <div class="col-md-12 ftco-animate">
                 <div class="car-list">
                     <table class="table table-hover">
@@ -112,32 +112,27 @@
                                 <th class="bg-secondary heading">Model</th>
                                 <th class="bg-secondary heading">Year</th>
                                 <th class="bg-dark heading">Per Day Rate (PHP)</th>
+                                <th class="bg-primary heading">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for car in cars %}
                             <tr>
                                 <td class="car-image product-name text-center price">
-                                    <p class="btn-custom"><a href="{% url 'car_detail' car.plate_number %}">View Details</a></p>
                                     <div class="img" style="background-image: url(
                                         {% if car.image %}{{ car.image.url }}{% else %}{% static 'user_side/images/default_car.jpg' %}{% endif %}
                                     );"></div>
-
                                 </td>
-                                <td class="text-center price">
-                                    <p class="btn-custom"><a href="{% url 'car_detail' car.plate_number %}">View Details</a></p>
+                                <td class="text-center">
                                     <h5 style="font-size: 1rem; font-weight: 600;">{{ car.brand }}</h5>
                                 </td>
-                                <td class="text-center price">
-                                    <p class="btn-custom"><a href="{% url 'car_detail' car.plate_number %}">View Details</a></p>
+                                <td class="text-center">
                                     <h5 style="font-size: 1rem; font-weight: 600;">{{ car.model }}</h5>
                                 </td>
-                                <td class="text-center price">
-                                    <p class="btn-custom"><a href="{% url 'car_detail' car.plate_number %}">View Details</a></p>
+                                <td class="text-center">
                                     <h5 style="font-size: 1rem; font-weight: 600;">{{ car.year }}</h5>
                                 </td>
-                                <td class="price text-center">
-                                    <p class="btn-custom"><a href="{% url 'car_detail' car.plate_number %}">View Details</a></p>
+                                <td class="text-center">
                                     <div class="price-rate">
                                         <h5 style="font-size: 1rem;">
                                             <span class="num">₱{{ car.price_per_day|floatformat:2|intcomma }}</span> 
@@ -145,18 +140,21 @@
                                         </h5>
                                     </div>
                                 </td>
+                                <td class="text-center">
+                   
+                                    <a href="{% url 'car_detail' car.plate_number %}" class="btn btn-dark btn-sm mt-2">Book this Car</a>
+                                </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center">No cars available for rent at the moment.</td>
+                                <td colspan="6" class="text-center">No cars available for rent at the moment.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                     
-                    
-                    <!-- Pagination -->
-                    <div class="pagination mt-4">
+                     <!-- Pagination -->
+                    <div class="pagination ml-2 mt-4">
                         <nav aria-label="Page navigation">
                             <ul class="pagination justify-content-center">
                                 {% if cars.has_previous %}
@@ -178,6 +176,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 </section>
 

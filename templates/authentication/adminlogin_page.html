@@ -1,6 +1,7 @@
 {% extends "administrator/admin_base.html" %}
 
 {% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <div class="page page-center">
   <div class="container container-tight py-4">
  
@@ -23,40 +24,68 @@
           {% endfor %}
         </div>
         {% endif %}
-        
-        <form method="post" autocomplete="off">
-          {% csrf_token %}
-          <div class="mb-3">
-            <label class="form-label">Username</label>
-            <input type="text" name="username" class="form-control" placeholder="Enter username" autocomplete="off" required>
-          </div>
-          <div class="mb-2">
-            <label class="form-label">
-              Password
-          
-            </label>
-            <div class="input-group input-group-flat">
-              <input type="password" name="password" class="form-control" placeholder="Your password" autocomplete="off" required>
-              <span class="input-group-text">
-             
-              </span>
+
+        <form method="post" autocomplete="off" class="px-4 py-3">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input type="text" name="username" class="form-control" placeholder="Enter username" autocomplete="off" required>
             </div>
-          </div>
-          <div class="mb-2">
-         
-          </div>
-          <div class="form-footer">
-            <button type="submit" class="btn btn-primary w-100">Sign in</button>
-          </div>
+            <div class="mb-3 position-relative">
+                <label class="form-label">Password</label>
+                <div class="input-group">
+                    <input type="password" name="password" id="password" class="form-control pe-5" placeholder="Your password" autocomplete="off" required>
+                    <span class="password-toggle" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;">
+                        <i class="fas fa-eye" id="togglePassword"></i>
+                    </span>
+                </div>
+            </div>
+            <div class="form-footer mt-4">
+                <button type="submit" class="btn btn-primary w-100">Sign in</button>
+            </div>
         </form>
+
+
       </div>
      
     </div>
 
   </div>
-</div>
+</div><script>
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordInput = document.getElementById('password');
+    const togglePassword = document.getElementById('togglePassword');
+    
+    // Always show the toggle icon
+    passwordInput.addEventListener('focus', function() {
+        document.querySelector('.password-toggle').style.display = 'block';
+    });
+    
+    passwordInput.addEventListener('blur', function() {
+        document.querySelector('.password-toggle').style.display = 'block';
+    });
+    
+    // Toggle password visibility
+    togglePassword.addEventListener('click', function(e) {
+        e.preventDefault();
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        this.classList.toggle('fa-eye');
+        this.classList.toggle('fa-eye-slash');
+    });
+});
+</script>
 
 <style>
+.password-toggle {
+    display: block !important; /* Force visibility at all times */
+    z-index: 10; /* Ensure it stays above the input */
+    pointer-events: auto; /* Ensure it remains clickable */
+}
+.input-group {
+    position: relative; /* Needed for absolute positioning of toggle */
+}
+
   body {
     background-image: url('https://source.unsplash.com/random/1920x1080/?admin,security');
     background-size: cover;

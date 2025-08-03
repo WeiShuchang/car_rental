@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <section class="ftco-section contact-section" id="login-page">
   <div class="container">
     <div class="row d-flex my-2 contact-info">
@@ -36,39 +37,45 @@
 
       <div class="col-md-8 block-9 mb-md-5">
         <form method="POST" class="px-5 py-2 contact-form">
-          {% csrf_token %}
-          <h2 class="text-center">Login</h2>
-      
-          <!-- Display messages -->
-          {% for message in messages %}
-              <div class="alert 
-                  {% if message.tags == 'success' %}alert-success
-                  {% elif message.tags == 'error' %}alert-danger
-                  {% elif message.tags == 'warning' %}alert-warning
-                  {% endif %}
-                  alert-dismissible fade show" role="alert" id="alert-message">
-                  {{ message|linebreaksbr }}
-              </div>
-          {% endfor %}
-      
-          <div class="form-group text-center">
-              <label for="username" class="form-label text-dark">Username</label>
-              <input type="text" name="username" id="username" class="form-control w-50 mx-auto" required>
-          </div>
-          <div class="form-group text-center">
-              <label for="password" class="form-label  text-dark">Password</label>
-              <input type="password" name="password" id="password" class="form-control w-50 mx-auto" required>
-          </div>
-      
-          <div class="form-group text-center">
-              <button type="submit" class="btn btn-sm btn-dark py-3 px-5">Login</button>
-          </div>
-      
-          <div class="text-center">
-              <p>Don't have an account? <a href="{% url 'signup' %}" style="text-decoration:underline;">Sign up here</a></p>
-          </div>
-      </form>
+            {% csrf_token %}
+            <h2 class="text-center">Login</h2>
+        
+            <!-- Display messages -->
+            {% for message in messages %}
+                <div class="alert 
+                    {% if message.tags == 'success' %}alert-success
+                    {% elif message.tags == 'error' %}alert-danger
+                    {% elif message.tags == 'warning' %}alert-warning
+                    {% endif %}
+                    alert-dismissible fade show" role="alert" id="alert-message">
+                    {{ message|linebreaksbr }}
+                </div>
+            {% endfor %}
+        
+            <div class="form-group" style="max-width: 400px; margin: 0 auto;">
+                <label for="username" class="form-label text-dark">Username</label>
+                <input type="text" name="username" id="username" class="form-control" required>
+            </div>
+            <div class="form-group position-relative" style="max-width: 400px; margin: 0 auto;">
+                <label for="password" class="form-label text-dark">Password</label>
+                <div class="position-relative">
+                    <input type="password" name="password" id="password" class="form-control pr-5" required>
+                    <i class="fas fa-eye position-absolute" id="togglePassword" 
+                      style="right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer;"></i>
+                </div>
+            </div>
+        
+            <div class="form-group text-center mt-3">
+                <button type="submit" class="btn btn-sm btn-dark py-3 px-5">Login</button>
+            </div>
+        
+            <div class="text-center">
+                <p>Don't have an account? <a href="{% url 'signup' %}" style="text-decoration:underline;">Sign up here</a></p>
+            </div>
+        </form>
     </div>
+
+
     
     </div>
   </div>
@@ -87,5 +94,20 @@
         alertMessage.style.display = "none";
     }, 3000);
 });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const togglePassword = document.querySelector('#togglePassword');
+        const password = document.querySelector('#password');
+        
+        togglePassword.addEventListener('click', function() {
+            // Toggle the type attribute
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            
+            // Toggle the icon
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    });
 </script>
 {% endblock content %}
