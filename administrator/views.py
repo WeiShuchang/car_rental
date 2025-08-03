@@ -19,7 +19,7 @@ def admin_dashboard(request):
     })
 
 def pending_reservations(request):
-    reservations = Reservation.objects.filter(status='pending').select_related('car', 'user')
+    reservations = Reservation.objects.filter(status='pending').select_related('car', 'user').order_by('-start_date')
     drivers = Driver.objects.filter(availability=True).select_related('user')  # Get only available drivers
 
     return render(request, 'administrator/pending_reservations.html', {

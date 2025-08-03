@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from administrator.models import Car, Driver, Reservation, UserProfile, ChatRoom
+from administrator.models import Car, Driver, Reservation, UserProfile, ChatRoom, CarImage
 from administrator.forms import CarForm
 from django.db.models import Count
 from django.contrib import messages
@@ -176,32 +176,50 @@ def add_admin(request):
     
     return redirect('all_admins_list')
 
-
 def add_car(request):
-    cars = Car.objects.all()  # Fetch the list of cars
+    cars = Car.objects.all()
 
     if request.method == 'POST':
-        form = CarForm(request.POST, request.FILES)
+        form = CarForm(request.POST)
         if form.is_valid():
             try:
-                car = form.save()
-                messages.success(request, f"Car '{car.brand} {car.model}' added successfully!")
-                return redirect('car_list')  # Redirect to refresh the list after adding
+                # Get all uploaded images
+                uploaded_images = request.FILES.getlist('images')
+                
+                if not uploaded_images:
+                    messages.error(request, "At least one image is required.")
+                    return render(request, 'administrator/car_list.html', {'form': form, 'cars': cars})
+                
+                # Set the first image as the main car image
+                car = form.save(commit=False)
+                car.image = uploaded_images[0]  # First image is the main one
+                car.save()
+                
+                # Save remaining images as CarImage instances
+                for image in uploaded_images[1:]:
+                    CarImage.objects.create(car=car, image=image)
+                
+                messages.success(
+                    request, 
+                    f"Car '{car.brand} {car.model}' added successfully!"
+                )
+                return redirect('car_list')
             except Exception as e:
-                error_message = f"An error occurred while saving the car: {e}"
+                messages.error(request, f"An error occurred: {str(e)}")
         else:
-            messages.error(request, f"An error occurred while saving the car, please try again")
-            error_message = "Please correct the errors below."
+            messages.error(request, "Please correct the errors below.")
 
         return render(request, 'administrator/car_list.html', {
             'form': form,
-            'error_message': error_message,
-            'cars': cars  # Ensure the car list is passed when an error occurs
+            'cars': cars
         })
     else:
         form = CarForm()
 
-    return render(request, 'administrator/car_list.html', {'form': form, 'cars': cars})
+    return render(request, 'administrator/car_list.html', {
+        'form': form, 
+        'cars': cars
+    })
 
 @csrf_protect
 def delete_car(request, car_id):
@@ -209,11 +227,28 @@ def delete_car(request, car_id):
     car.delete()
     messages.success(request, "Car deleted successfully.")
     return redirect("car_list")  # Change this to your actual view name
+
+
 def edit_car(request, car_id):
     car = get_object_or_404(Car, id=car_id)
     
     if request.method == "GET":
-        # Return JSON data for the edit modal
+        # Get all images (main + additional)
+        images = []
+        if car.image:
+            images.append({
+                'url': car.image.url,
+                'is_main': True,
+                'id': 'main'
+            })
+        
+        for img in car.images.all():
+            images.append({
+                'url': img.image.url,
+                'is_main': False,
+                'id': img.id
+            })
+        
         return JsonResponse({
             "id": car.id,
             "brand": car.brand,
@@ -221,23 +256,44 @@ def edit_car(request, car_id):
             "year": car.year,
             "plate_number": car.plate_number,
             "body_type": car.body_type,
-            "price_per_hour": str(car.price_per_hour),
+            "available": car.available,
             "price_per_day": str(car.price_per_day),
+            "seating_capacity": car.seating_capacity,
+            "images": images,
+            "main_image_url": car.image.url if car.image else None
         })
 
     elif request.method == "POST":
         form = CarForm(request.POST, request.FILES, instance=car)
         if form.is_valid():
+            # Handle main image update
+            if 'image' in request.FILES:
+                car.image = request.FILES['image']
+            
+            # Handle additional images
+            if 'additional_images' in request.FILES:
+                for img in request.FILES.getlist('additional_images'):
+                    CarImage.objects.create(car=car, image=img)
+            
+            # Handle image deletions
+            if 'delete_images' in request.POST:
+                deleted_ids = request.POST.getlist('delete_images')
+                CarImage.objects.filter(id__in=deleted_ids).delete()
+            
+            if 'delete_main_image' in request.POST:
+                car.image.delete()
+                car.image = None
+            
             form.save()
             messages.success(request, "Car details updated successfully!")
-            return redirect("car_list")  # Change this to your actual list view name
+            return redirect("car_list")
         else:
-            # If the form is invalid, show error messages
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"{field}: {error}")
-    
-    return redirect("car_list")  # Redirect back to the car list page
+            return redirect("car_list")
+
+
 def driver_list(request):
     drivers = Driver.objects.all()  # Fetch all drivers
     paginator = Paginator(drivers, 10)  # Show 10 drivers per page

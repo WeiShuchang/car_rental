@@ -86,6 +86,7 @@
     tr:hover .btn-custom {
         display: block;!important
     }
+    
 </style>
 
 <section class="ftco-section ftco-cart mt-3" id="cars_section">
@@ -112,17 +113,55 @@
                                 <th class="bg-secondary heading">Model</th>
                                 <th class="bg-secondary heading">Year</th>
                                 <th class="bg-dark heading">Per Day Rate (PHP)</th>
+                                <th class="bg-dark heading">Seating Capacity</th>
                                 <th class="bg-primary heading">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for car in cars %}
                             <tr>
-                                <td class="car-image product-name text-center price">
-                                    <div class="img" style="background-image: url(
-                                        {% if car.image %}{{ car.image.url }}{% else %}{% static 'user_side/images/default_car.jpg' %}{% endif %}
-                                    );"></div>
-                                </td>
+                            <td class="car-image product-name text-center price">
+                                <div id="carousel-{{ car.id }}" class="carousel slide carousel-fade" data-bs-ride="carousel" style="width: 200px; height: 120px; margin: 0 auto;">
+                                    <div class="carousel-inner" style="border-radius: 5px; overflow: hidden;">
+                                        <!-- Main Image -->
+                                        <div class="carousel-item active" data-bs-interval="3000">
+                                            <div class="img" style="
+                                                background-image: url({% if car.image %}{{ car.image.url }}{% else %}{% static 'user_side/images/default_car.jpg' %}{% endif %});
+                                                height: 120px;
+                                                background-size: cover;
+                                                background-position: center;
+                                            "></div>
+                                        </div>
+                                        
+                                        <!-- Additional Images -->
+                                        {% for image in car.images.all %}
+                                        <div class="carousel-item" data-bs-interval="3000">
+                                            <div class="img" style="
+                                                background-image: url({{ image.image.url }});
+                                                height: 120px;
+                                                background-size: cover;
+                                                background-position: center;
+                                            "></div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <!-- Navigation Controls (only show if multiple images) -->
+                                    {% if car.images.all.count > 0 %}
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#carousel-{{ car.id }}" data-bs-slide="prev"
+                                    style="width: 30px; height: 30px; top: 50%; left: 5px; transform: translateY(-50%); background: rgba(0,0,0,0.3); border-radius: 50%; border: none;">
+                                        <i class="fas fa-chevron-left" style="color: white;"></i>
+                           
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#carousel-{{ car.id }}" data-bs-slide="next"
+                                    style="width: 30px; height: 30px; top: 50%; right: 5px; transform: translateY(-50%); background: rgba(0,0,0,0.3); border-radius: 50%; border: none;">
+                                        <i class="fas fa-chevron-right" style="color: white;"></i>
+                           
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+
                                 <td class="text-center">
                                     <h5 style="font-size: 1rem; font-weight: 600;">{{ car.brand }}</h5>
                                 </td>
@@ -139,6 +178,9 @@
                                             <span class="per">/ day</span>
                                         </h5>
                                     </div>
+                                </td>
+                                <td class="text-center">
+                                    <h5 style="font-size: 1rem; font-weight: 600;">{{ car.seating_capacity }}</h5>
                                 </td>
                                 <td class="text-center">
                    
@@ -179,5 +221,23 @@
 
     </div>
 </section>
+
+<!-- Optional: Add this script for smoother autoplay control -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var carousels = document.querySelectorAll('.carousel');
+    carousels.forEach(function(carousel) {
+        // Pause on hover
+        carousel.addEventListener('mouseenter', function() {
+            var instance = bootstrap.Carousel.getInstance(carousel);
+            instance.pause();
+        });
+        carousel.addEventListener('mouseleave', function() {
+            var instance = bootstrap.Carousel.getInstance(carousel);
+            instance.cycle();
+        });
+    });
+});
+</script>
 
 {% endblock content %}

@@ -4,15 +4,84 @@
 
 {% block content %}
 <style>
-     /* NEW IMAGE-ONLY STYLES */
-    .car-detail-box img {
+    .css-slider {
+    position: relative;
+    max-width: 100%;
+    margin: auto;
+        overflow: hidden;
+    }
+
+    .slider-container {
+        display: flex;
+        transition: transform 0.5s ease-in-out;
+    }
+
+    .slide {
+        min-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .slider-image {
         width: 100%;
-        height: 300px; /* Fixed height */
-        object-fit: cover;
+        height: auto;
         border-radius: 8px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        display: block;
     }
-    
+
+    .slider-prev, .slider-next {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 40px;
+        height: 40px;
+        background-color: rgba(0,0,0,0.5);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        font-size: 18px;
+        cursor: pointer;
+        z-index: 10;
+    }
+
+    .slider-prev {
+        left: 10px;
+    }
+
+    .slider-next {
+        right: 10px;
+    }
+
+    .slider-dots {
+        position: absolute;
+        bottom: 20px;
+        left: 0;
+        right: 0;
+        text-align: center;
+    }
+
+    .dot {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        margin: 0 5px;
+        background-color: rgba(255,255,255,0.5);
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .dot.active {
+        background-color: white;
+    }
+        /* NEW IMAGE-ONLY STYLES */
+        .car-detail-box img {
+            width: 100%;
+            height: 300px; /* Fixed height */
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
     .car-detail-box .col-md-6:first-child {
         padding-right: 15px; /* Add some spacing between image and text */
     }
@@ -169,25 +238,86 @@
         font-size: 14px;
     }
 </style>
-
-
 <section class="ftco-section mt-4">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-10">
                 <div class="car-detail-box">
                     <div class="row">
-                        <div class="col-md-6">
-                            <img src="{% if car.image %}{{ car.image.url }}{% else %}{% static 'user_side/images/default_car.jpg' %}{% endif %}" class="img-fluid rounded shadow" alt="{{ car.brand }} {{ car.model }}">
+                    <div class="col-md-6">
+                      <div class="css-slider" id="carousel-{{ car.id }}">
+                            <div class="slider-container">
+                                <!-- Main Image -->
+                                <div class="slide active">
+                                    <img src="{% if car.image %}{{ car.image.url }}{% else %}{% static 'user_side/images/default_car.jpg' %}{% endif %}" 
+                                        class="slider-image" 
+                                        alt="{{ car.brand }} {{ car.model }}">
+                                </div>
+                                
+                                <!-- Additional Images -->
+                                {% for image in car.images.all %}
+                                <div class="slide">
+                                    <img src="{{ image.image.url }}" 
+                                        class="slider-image" 
+                                        alt="{{ car.brand }} {{ car.model }}">
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Navigation arrows -->
+                            <button class="slider-prev">&#10094;</button>
+                            <button class="slider-next">&#10095;</button>
+                            
+                            <!-- Indicator dots -->
+                            <div class="slider-dots">
+                                <span class="dot active" data-slide="0"></span>
+                                {% for image in car.images.all %}
+                                <span class="dot" data-slide="{{ forloop.counter }}"></span>
+                                {% endfor %}
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <h3 class="mb-3">{{ car.brand }} {{ car.model }} ({{ car.year }})</h3>
-                            <p class="text-dark"><strong>Body Type:</strong> {{ car.get_body_type_display }}</p>
-                            <p class="text-dark"><strong>Plate Number:</strong> {{ car.plate_number }}</p>
-
-                            <h4 class="text-primary">₱{{ car.price_per_day|floatformat:2|intcomma }} / day</h4>
-                            <a href="#" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#rentModal">Rent This Car</a>
-                        </div>
+                    </div>
+                  <div class="col-md-6">
+    <!-- Main header with just brand -->
+    <div class="border-start border-4 border-primary ps-3">
+        <h2 class="mb-1">{{ car.brand }}</h2>
+    </div>
+    
+    <!-- Details in card-like format -->
+    <div class="bg-light p-2 rounded mb-4">
+        <ul class="list-unstyled mb-0">
+            <li class="mb-2 d-flex align-items-center">
+                <i class="bi bi-calendar3 text-dark mx-2"></i>
+                <span class="text-dark"><strong>Year:</strong> {{ car.year }}</span>
+            </li>
+            <li class="mb-2 d-flex align-items-center">
+                <i class="fas fa-car text-dark mx-2"></i>
+                <span class="text-dark"><strong>Model:</strong> {{ car.model }}</span>
+            </li>
+            <li class="mb-2 d-flex align-items-center">
+                <i class="bi bi-tag-fill text-dark mx-2"></i>
+                <span class="text-dark"><strong>Plate Number:</strong> {{ car.plate_number }}</span>
+            </li>
+            <li class="d-flex align-items-center">
+                <i class="bi bi-people-fill text-dark mx-2"></i>
+                <span class="text-dark"><strong>Seating:</strong> {{ car.seating_capacity }} persons</span>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- Price with emphasis -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <p class="text-dark mb-1" style="opacity: 0.8;">Daily Rate</p>
+            <h3 class="text-dark mb-0" style="font-weight: 700;">₱{{ car.price_per_day|floatformat:2|intcomma }}</h3>
+        </div>
+        <a href="#" class="btn btn-dark px-4  text-light" data-bs-toggle="modal" data-bs-target="#rentModal">
+            <i class="bi bi-calendar-check mx-2"></i>Rent Now
+        </a>
+    </div>
+    
+  
+</div>
                     </div>
                 </div>
             </div>
@@ -384,6 +514,58 @@ document.addEventListener('DOMContentLoaded', function() {
     
     paymentMethod.addEventListener('change', function() {
         qrContainer.style.display = this.value === 'gcash' ? 'block' : 'none';
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get all sliders on the page
+    document.querySelectorAll('.css-slider').forEach(slider => {
+        const container = slider.querySelector('.slider-container');
+        const slides = slider.querySelectorAll('.slide');
+        const prevBtn = slider.querySelector('.slider-prev');
+        const nextBtn = slider.querySelector('.slider-next');
+        const dots = slider.querySelectorAll('.dot');
+        
+        let currentIndex = 0;
+        const totalSlides = slides.length;
+        
+        // Update slider position
+        function updateSlider() {
+            container.style.transform = `translateX(-${currentIndex * 100}%)`;
+            
+            // Update active dot
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentIndex);
+            });
+        }
+        
+        // Next slide
+        nextBtn.addEventListener('click', () => {
+            currentIndex = (currentIndex + 1) % totalSlides;
+            updateSlider();
+        });
+        
+        // Previous slide
+        prevBtn.addEventListener('click', () => {
+            currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
+            updateSlider();
+        });
+        
+        // Dot navigation
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                currentIndex = index;
+                updateSlider();
+            });
+        });
+        
+        // Optional: Auto-slide
+        // setInterval(() => {
+        //     currentIndex = (currentIndex + 1) % totalSlides;
+        //     updateSlider();
+        // }, 5000);
     });
 });
 </script>

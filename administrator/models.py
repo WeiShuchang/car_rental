@@ -70,12 +70,24 @@ class Car(models.Model):
     year = models.PositiveIntegerField()
     plate_number = models.CharField(max_length=20, unique=True)
     body_type = models.CharField(max_length=10, choices=BODY_TYPES)
+    seating_capacity = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Number of seats available"
+    )
     available = models.BooleanField(default=True)
     price_per_day = models.DecimalField(max_digits=10, decimal_places=2, help_text="Price per day in USD")
-    image = models.ImageField(upload_to='car_images/', null=True, blank=True)
+    image = models.ImageField(upload_to='car_images/', null=True, blank=True, help_text="Main image of the car")
 
     def __str__(self):
         return f"{self.brand} {self.model} ({self.plate_number})"
+
+class CarImage(models.Model):
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='car_images/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"Image for {self.car.brand} {self.car.model}"
     
 class Reservation(models.Model):
     STATUS_CHOICES = (

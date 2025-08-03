@@ -15,7 +15,8 @@ def user_dashboard(request):
     return render(request, "user/user_dashboard.html", {"cars": cars})
 
 def cars_for_rent(request):
-    cars_list = Car.objects.filter(available=True)  # Fetch only available cars
+    # Prefetch related images to optimize database queries
+    cars_list = Car.objects.filter(available=True).prefetch_related('images')
     paginator = Paginator(cars_list, 5)  # Show 5 cars per page
 
     page_number = request.GET.get("page")

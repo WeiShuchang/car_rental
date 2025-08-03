@@ -47,6 +47,23 @@
         height: 100%;
         object-fit: cover;
     }
+
+    .carousel-inner {
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.carousel-indicators button {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin: 0 2px;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.carousel-control-prev, .carousel-control-next {
+    width: 20%;
+}
     
 </style>
 
@@ -106,6 +123,7 @@
                                     <th>Plate Number</th>
                                     <th>Body Type</th>
                                     <th>Price Per Day</th>
+                                    <th>Seating Capacity</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -120,22 +138,64 @@
                                                 <span class="badge bg-danger"></span>
                                             {% endif %}
                                         </td>
-                                        <td>
-                                            {% if car.image %}
-                                                <div class="image-container">
-                                                    <img src="{{ car.image.url }}" alt="{{ car.brand }}" class="img-thumbnail">
+                                       <td class="py-2">
+                                            <div id="carousel-{{ car.id }}" class="carousel slide" data-bs-ride="carousel" style="width: 120px; height: 80px;">
+                                                <div class="carousel-inner" style="height: 100%;">
+                                                    <!-- Main Image (always shown first) -->
+                                                    <div class="carousel-item {% if not car.image and not car.images.all %}active{% else %}active{% endif %}" style="height: 100%;">
+                                                        {% if car.image %}
+                                                            <img src="{{ car.image.url }}" 
+                                                                class="d-block w-100 h-100" 
+                                                                style="object-fit: cover;"
+                                                                alt="{{ car.brand }}">
+                                                        {% else %}
+                                                            <div class="d-flex align-items-center justify-content-center w-100 h-100 bg-light text-muted" style="border: 1px solid #dee2e6;">
+                                                                No Image
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    
+                                                    <!-- Additional Images -->
+                                                    {% for image in car.images.all %}
+                                                        <div class="carousel-item" style="height: 100%;">
+                                                            <img src="{{ image.image.url }}" 
+                                                                class="d-block w-100 h-100" 
+                                                                style="object-fit: cover;"
+                                                                alt="{{ car.brand }}">
+                                                        </div>
+                                                    {% endfor %}
                                                 </div>
-                                            {% else %}
-                                                <span class="text-muted">No Image</span>
-                                            {% endif %}
+                                                
+                                                <!-- Show indicators only if there are multiple images -->
+                                                {% if car.image and car.images.all.count > 0 or car.images.all.count > 1 %}
+                                                    <div class="carousel-indicators" style="bottom: -25px;">
+                                                        <button type="button" data-bs-target="#carousel-{{ car.id }}" data-bs-slide-to="0" class="active"></button>
+                                                        {% for i in car.images.all %}
+                                                            <button type="button" data-bs-target="#carousel-{{ car.id }}" data-bs-slide-to="{{ forloop.counter }}"></button>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                                
+                                                <!-- Show controls only if there are multiple images -->
+                                                {% if car.image and car.images.all.count > 0 or car.images.all.count > 1 %}
+                                                    <button class="carousel-control-prev" type="button" data-bs-target="#carousel-{{ car.id }}" data-bs-slide="prev">
+                                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                                        <span class="visually-hidden">Previous</span>
+                                                    </button>
+                                                    <button class="carousel-control-next" type="button" data-bs-target="#carousel-{{ car.id }}" data-bs-slide="next">
+                                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                                        <span class="visually-hidden">Next</span>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
                                         </td>
                                         <td>{{ car.brand }}</td>
                                         <td>{{ car.model }}</td>
                                         <td>{{ car.year }}</td>
                                         <td>{{ car.plate_number }}</td>
                                         <td>{{ car.get_body_type_display }}</td>
-                                 
                                         <td>₱{{ car.price_per_day|intcomma }}</td>
+                                        <td>{{ car.seating_capacity }}</td>
                                         <td>
                                             <div class="d-flex gap-1">
                                                 <button class="btn btn-sm btn-primary edit-car-btn" 
@@ -233,7 +293,6 @@
         </div>
     </div>
 </div>
-
 <!-- Add Car Modal -->
 <div class="modal fade" id="modal-car" tabindex="-1" aria-labelledby="modal-car-label" aria-hidden="true">
     <div class="modal-dialog">
@@ -280,7 +339,11 @@
                             </select>
                             <div class="invalid-feedback">{{ form.body_type.errors|first }}</div>
                         </div>
-                    
+                        <div class="mb-3 col-md-6">
+                            <label for="seating_capacity" class="form-label">Seating Capacity</label>
+                            <input type="number" class="form-control {% if form.seating_capacity.errors %}is-invalid{% endif %}" id="seating_capacity" name="seating_capacity" value="{{ form.seating_capacity.value|default_if_none:'' }}" min="1" max="20" required>
+                            <div class="invalid-feedback">{{ form.seating_capacity.errors|first }}</div>
+                        </div>
                         <div class="mb-3 col-md-6">
                             <label for="price_per_day" class="form-label">Price Per Day</label>
                             <input type="number" step="0.01" class="form-control {% if form.price_per_day.errors %}is-invalid{% endif %}" id="price_per_day" name="price_per_day" value="{{ form.price_per_day.value|default_if_none:'' }}" required>
@@ -295,9 +358,18 @@
                             <div class="invalid-feedback">{{ form.available.errors|first }}</div>
                         </div>
                         <div class="mb-3 col-md-6">
-                            <label for="image" class="form-label">Car Image</label>
-                            <input type="file" class="form-control {% if form.image.errors %}is-invalid{% endif %}" id="image" name="image" accept="image/*">
+                            <label for="images" class="form-label">Car Images</label>
+                            <input 
+                                type="file" 
+                                class="form-control {% if form.image.errors %}is-invalid{% endif %}" 
+                                id="images" 
+                                name="images" 
+                                accept="image/*" 
+                                multiple 
+                                required
+                            >
                             <div class="invalid-feedback">{{ form.image.errors|first }}</div>
+                            <small class="text-muted">First image will be used as the main car image. You can upload multiple images.</small>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -362,13 +434,30 @@
                             <label for="editPricePerDay" class="form-label">Price Per Day</label>
                             <input type="number" step="0.01" class="form-control" id="editPricePerDay" name="price_per_day" required>
                         </div>
+
                         <div class="col-md-6">
-                            <label for="editImage" class="form-label">Car Image</label>
-                            <input type="file" class="form-control" id="editImage" name="image">
+                            <label for="editSeatingCapacity" class="form-label">Seating Capacity</label>
+                            <input type="number" class="form-control" id="editSeatingCapacity" 
+                                name="seating_capacity" min="1" max="20" required>
                         </div>
-                        <div class="col-md-6 text-center">
-                            <img id="current_image" src="" alt="Car Image" class="img-thumbnail" width="100" style="display: none;">
+                          <!-- Image Section -->
+                        <div class="col-12">
+                            <h6>Current Images</h6>
+                            <div id="currentImagesContainer" class="d-flex flex-wrap gap-2 mb-3">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Replace Main Image</label>
+                                <input type="file" class="form-control" id="editImage" name="image" accept="image/*">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Add Additional Images</label>
+                                <input type="file" class="form-control" name="additional_images" multiple accept="image/*">
+                            </div>
                         </div>
+
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -403,46 +492,83 @@
         });
     });
 </script>
+
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const editModal = document.getElementById("modal-edit");
+document.addEventListener("DOMContentLoaded", function () {
+    const editModal = document.getElementById("modal-edit");
 
-        editModal.addEventListener("show.bs.modal", function (event) {
-            // Get the button that triggered the modal
-            const button = event.relatedTarget;
+    editModal.addEventListener("show.bs.modal", function (event) {
+        const button = event.relatedTarget;
+        const carId = button.getAttribute("data-id");
+        const editForm = document.getElementById("editCarForm");
+        editForm.action = `/superadmin/cars/${carId}/edit/`;
 
-            // Get the car ID from the button's data-id attribute
-            const carId = button.getAttribute("data-id");
+        // Create a Set to track deleted images
+        const deletedImages = new Set();
 
-            // Set the form action dynamically
-            const editForm = document.getElementById("editCarForm");
-            editForm.action = `/superadmin/cars/${carId}/edit/`;
+        // Fetch car data including images
+        fetch(`/superadmin/cars/${carId}/edit/`)
+            .then(response => response.json())
+            .then(data => {
 
-            // Populate the form fields using data-* attributes
-            document.getElementById("editCarId").value = carId;
-            document.getElementById("editBrand").value = button.getAttribute("data-brand");
-            document.getElementById("editModel").value = button.getAttribute("data-model");
-            document.getElementById("editYear").value = button.getAttribute("data-year");
-            document.getElementById("editPlateNumber").value = button.getAttribute("data-plate-number");
-            document.getElementById("editBodyType").value = button.getAttribute("data-body-type");
-            document.getElementById("editPricePerDay").value = button.getAttribute("data-price-per-day");
+              
+                // Populate basic fields
+                document.getElementById("editCarId").value = data.id;
+                document.getElementById("editBrand").value = data.brand;
+                document.getElementById("editModel").value = data.model;
+                document.getElementById("editYear").value = data.year;
+                document.getElementById("editPlateNumber").value = data.plate_number;
+                document.getElementById("editBodyType").value = data.body_type;
+                document.getElementById("editSeatingCapacity").value = data.seating_capacity; // Add this line
+                document.getElementById("editPricePerDay").value = data.price_per_day;
+                document.getElementById("editAvailability").value = data.available.toString();
 
-            // Set availability dropdown
-            const availabilitySelect = document.getElementById("editAvailability");
-            const availability = button.getAttribute("data-available"); // "true" or "false"
-            availabilitySelect.value = availability; // Directly set the value
+                // Handle images
+                const container = document.getElementById("currentImagesContainer");
+                container.innerHTML = '';
 
-            // Set the image preview if it exists
-            const imageUrl = button.getAttribute("data-image");
-            const currentImage = document.getElementById("current_image");
-            if (imageUrl) {
-                currentImage.src = imageUrl;
-                currentImage.style.display = "block"; // Ensure the image is visible
-            } else {
-                currentImage.src = "";
-                currentImage.style.display = "none"; // Hide the image if no URL is provided
-            }
-        });
+                // Add hidden field container for deleted images
+                const deleteContainer = document.createElement('div');
+                deleteContainer.id = 'deleteImagesContainer';
+                deleteContainer.style.display = 'none';
+                container.appendChild(deleteContainer);
+
+                if (data.images.length > 0) {
+                    data.images.forEach(img => {
+                        const imgDiv = document.createElement('div');
+                        imgDiv.className = 'position-relative';
+                        imgDiv.style.width = '100px';
+                        imgDiv.dataset.imageId = img.id;
+                        
+                        imgDiv.innerHTML = `
+                            <img src="${img.url}" class="img-thumbnail" style="height: 80px; width: 100px; object-fit: cover;">
+                            ${img.is_main ? 
+                                '<span class="badge bg-primary position-absolute top-0 start-0">Main</span>' : 
+                                `<button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 p-0 px-1" 
+                                    onclick="deleteImageHandler(this, '${img.id}')">×</button>`
+                            }
+                        `;
+                        container.appendChild(imgDiv);
+                    });
+                } else {
+                    container.innerHTML = '<p class="text-muted">No images available</p>';
+                }
+            });
+
+        // Image deletion handler
+        window.deleteImageHandler = function(button, imageId) {
+            const imgDiv = button.closest('.position-relative');
+            imgDiv.remove();
+            
+            // Add hidden input for deleted image
+            const deleteContainer = document.getElementById('deleteImagesContainer');
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'delete_images';
+            hiddenInput.value = imageId;
+            deleteContainer.appendChild(hiddenInput);
+        };
     });
+});
 </script>
 {% endblock %}
