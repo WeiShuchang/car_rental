@@ -84,9 +84,9 @@
                                                 Edit
                                             </a>
                                             {% if profile.user.is_active %}
-                                                <a href="" class="btn btn-sm btn-danger mx-1">Deactivate</a>
+                                                <a href="{% url 'toggle_user_status' profile.user.id %}" class="btn btn-sm btn-danger mx-1">Deactivate</a>
                                             {% else %}
-                                                <a href="" class="btn btn-sm btn-success">Activate</a>
+                                                <a href="{% url 'toggle_user_status' profile.user.id %}" class="btn btn-sm btn-success mx-1">Activate</a>
                                             {% endif %}
                                         </div>
                                     </td>
@@ -114,7 +114,7 @@
                 <h5 class="modal-title">Edit User</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="post" action="">
+            <form method="post" action="{% url 'edit_user' profile.user.id %}">
                 {% csrf_token %}
                 <div class="modal-body">
                     <div class="mb-3">

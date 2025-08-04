@@ -684,3 +684,86 @@ def generate_reservations_pdf(request):
     buffer.close()
     response.write(pdf)
     return response
+
+def edit_user(request, user_id):
+    if not request.user.is_authenticated or not request.user.userprofile.role in ['admin', 'superadmin']:
+        return redirect('login')  # or wherever you want to redirect unauthorized users
+    
+    user = get_object_or_404(User, id=user_id)
+    profile = get_object_or_404(UserProfile, user=user)
+    
+    if request.method == 'POST':
+        # Update user fields
+        user.first_name = request.POST.get('first_name', '')
+        user.last_name = request.POST.get('last_name', '')
+        user.email = request.POST.get('email', '')
+        user.save()
+        
+        # Update profile fields
+        profile.contact_number = request.POST.get('contact_number', '')
+        profile.save()
+        
+        messages.success(request, 'User updated successfully!')
+        return redirect('all_users_list')  # redirect to your user management page
+    
+    # If not POST, redirect back (this shouldn't happen as form is in modal)
+    return redirect('all_users_list')
+
+def toggle_user_status(request, user_id):
+    if not request.user.is_authenticated or not request.user.userprofile.role in ['admin', 'superadmin']:
+        return redirect('login')  # Redirect unauthorized users
+    
+    user = get_object_or_404(User, id=user_id)
+    
+    # Toggle the active status
+    user.is_active = not user.is_active
+    user.save()
+    
+    # Set appropriate message
+    if user.is_active:
+        messages.success(request, f'User {user.username} has been activated successfully!')
+    else:
+        messages.success(request, f'User {user.username} has been deactivated successfully!')
+    
+    return redirect('all_users_list')  # Redirect back to user management page
+
+def edit_admin(request, user_id):
+    if not request.user.is_authenticated or request.user.userprofile.role != 'superadmin':
+        messages.error(request, "You don't have permission to perform this action.")
+        return redirect('admin_dashboard')  # or your admin dashboard URL
+    
+    user = get_object_or_404(User, id=user_id)
+    profile = get_object_or_404(UserProfile, user=user)
+    
+    # Update user fields
+    user.first_name = request.POST.get('first_name', '')
+    user.last_name = request.POST.get('last_name', '')
+    user.email = request.POST.get('email', '')
+    user.save()
+    
+    # Update profile fields
+    profile.contact_number = request.POST.get('contact_number', '')
+    profile.role = request.POST.get('role', 'admin')  # Default to admin if not specified
+    profile.save()
+    
+    messages.success(request, 'Admin updated successfully!')
+    return redirect('all_admins_list')  # redirect to your admin management page
+
+
+def toggle_admin_status(request, user_id):
+    if not request.user.is_authenticated or request.user.userprofile.role != 'superadmin':
+        messages.error(request, "You don't have permission to perform this action.")
+        return redirect('admin_dashboard')
+    
+    user = get_object_or_404(User, id=user_id)
+    
+    # Toggle the active status
+    user.is_active = not user.is_active
+    user.save()
+    
+    if user.is_active:
+        messages.success(request, f'Admin {user.username} has been restored successfully!')
+    else:
+        messages.success(request, f'Admin {user.username} has been revoked successfully!')
+    
+    return redirect('all_admins_list')

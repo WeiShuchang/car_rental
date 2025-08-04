@@ -27,4 +27,8 @@ urlpatterns = [
     path("complete-reservation/<int:reservation_id>/", views.complete_reservation, name="superadmin_complete_reservation"),
     path('completed-travels/', views.completed_reservations, name='superadmin_completed_reservations'),
     path('reservations/<int:reservation_id>/update-payment/', views.update_payment_status, name='superadmin_update_payment_status'),
+    path('edit-user/<int:user_id>/', views.edit_user, name='edit_user'),
+    path('toggle-user-status/<int:user_id>/', views.toggle_user_status, name='toggle_user_status'),
+    path('edit-admin/<int:user_id>/', views.edit_admin, name='edit_admin'),
+    path('toggle-admin-status/<int:user_id>/', views.toggle_admin_status, name='toggle_admin_status'),
 ]

@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from django.contrib.auth.models import User
+from .models import UserProfile
 
 
 def admin_dashboard(request):

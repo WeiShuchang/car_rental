@@ -59,7 +59,7 @@
                                     <th>Email</th>
                                     <th>Last Login</th>
                                     <th>Status</th>
-                                    {% comment %} <th>Actions</th> {% endcomment %}
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -67,7 +67,7 @@
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <span class="avatar me-2" style="background-image: url({% if profile.user.userprofile.image %}{{ profile.user.userprofile.image.url }}{% else %}/static/default-admin.png{% endif %})"></span>
+                              
                                             <div>
                                                 {{ profile.user.get_full_name|default:profile.user.username }}
                                                 <div class="text-muted small">@{{ profile.user.username }}</div>
@@ -82,18 +82,18 @@
                                             {% if profile.user.is_active %}Active{% else %}Inactive{% endif %}
                                         </span>
                                     </td>
-                                    {% comment %} <td>
+                                    <td>
                                         <div class="btn-group">
-                                            <a href="" class="btn btn-sm btn-primary">
+                                            <a href="#" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modal-edit-admin-{{ profile.user.id }}">
                                                 Edit
                                             </a>
                                             {% if profile.user.is_active %}
-                                                <a href="" class="btn btn-sm btn-danger mx-1">Revoke</a>
+                                                <a href="{% url 'toggle_admin_status' profile.user.id %}" class="btn btn-sm btn-danger mx-1">Revoke</a>
                                             {% else %}
-                                                <a href="" class="btn btn-sm btn-success">Restore</a>
+                                                <a href="{% url 'toggle_admin_status' profile.user.id %}" class="btn btn-sm btn-success mx-1">Restore</a>
                                             {% endif %}
                                         </div>
-                                    </td> {% endcomment %}
+                                    </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
@@ -108,6 +108,53 @@
         </div>
     </div>
 </div>
+
+<!-- Edit Admin Modals -->
+{% for profile in admins %}
+<div class="modal fade" id="modal-edit-admin-{{ profile.user.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Admin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'edit_admin' profile.user.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">First Name</label>
+                        <input type="text" class="form-control" name="first_name" value="{{ profile.user.first_name }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" class="form-control" name="last_name" value="{{ profile.user.last_name }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" value="{{ profile.user.email }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contact Number</label>
+                        <input type="text" class="form-control" name="contact_number" value="{{ profile.contact_number|default:'' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select class="form-select" name="role">
+                            {% for value, label in profile.ROLE_CHOICES %}
+                                <option value="{{ value }}" {% if profile.role == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
 
 <div class="modal fade" id="addAdminModal" tabindex="-1" aria-labelledby="addAdminModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">

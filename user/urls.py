@@ -13,4 +13,5 @@ urlpatterns = [
     path('history/', views.reservation_history, name='reservation_history'),
     path('verify-email/', views.verify_email_view, name='verify-email'),
     path('resend-verification/', views.resend_verification, name='resend-verification'),
+    
 ]
