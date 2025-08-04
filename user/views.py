@@ -8,6 +8,13 @@ from django.utils.timezone import make_aware
 from datetime import timedelta
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from administrator.models import UserProfile, Car, ChatRoom, Message
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib import messages
+from django.shortcuts import redirect
 
 # Create your views here.
 def user_dashboard(request):
@@ -135,3 +142,66 @@ def reservation_history(request):
         'reservations': reservations,
     }
     return render(request, 'user/history.html', context)
+
+@login_required
+def verify_email_view(request):
+    if request.method == "POST":
+        verification_code = request.POST.get('verification_code')
+        
+        try:
+            profile = UserProfile.objects.get(user=request.user)
+            
+            if profile.email_verification_code == verification_code:
+                # Update verification status
+                profile.is_email_verified = True
+                profile.save()
+                
+                messages.success(request, "Email successfully verified!")
+                return redirect('user_dashboard')
+            else:
+                messages.error(request, "Invalid verification code. Please try again.")
+                
+        except UserProfile.DoesNotExist:
+            messages.error(request, "User profile not found. Please contact support.")
+    
+    return render(request, 'authentication/verify_email.html')
+
+
+
+@login_required
+def resend_verification(request):
+    try:
+        profile = request.user.userprofile
+        
+        # Check if verification code exists
+        if not profile.email_verification_code:
+            messages.error(request, "No verification code found. Please contact support.")
+            return redirect('verify-email')
+        
+        # Resend the existing code
+        send_verification_email(request.user, profile.email_verification_code)
+        
+        messages.success(request, "Verification code has been resent to your email.")
+    except UserProfile.DoesNotExist:
+        messages.error(request, "Error: User profile not found. Please contact support.")
+    
+    return redirect('verify-email')
+
+def send_verification_email(user, verification_code):
+    subject = 'Your Verification Code'
+    message = f"""
+    Hello {user.username},
+    
+    Here is your verification code: {verification_code}
+    
+    Enter this code on our website to verify your email address.
+    
+    If you didn't request this code, please ignore this email.
+    """
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+        fail_silently=False,
+    )

@@ -6,6 +6,7 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 
+
 def admin_dashboard(request):
     reservation_counts = {
         'pending': Reservation.objects.filter(status='pending').count(),

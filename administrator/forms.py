@@ -105,7 +105,7 @@ class SignUpForm(forms.ModelForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data['password1'])
-        user.is_active = False  # User remains inactive until verification
+        user.is_active = True  # User is active immediately after signup
         
         if commit:
             user.save()
@@ -117,7 +117,7 @@ class SignUpForm(forms.ModelForm):
                     'role': 'user',
                     'contact_number': self.cleaned_data['contact_number'],
                     'email_verification_code': verification_code,
-                    'is_email_verified': False,
+                    'is_email_verified': False,  # Email still needs verification
                 }
             )
             
@@ -129,8 +129,8 @@ class SignUpForm(forms.ModelForm):
         subject = 'Verify Your Email Address'
         message = f"""
         Thank you for registering!
-        Your verification code is: **{verification_code}**
-        Enter this code on the verification page to activate your account.
+        Your verification code is: {verification_code}
+        Enter this code on our website to complete your registration.
         """
         send_mail(
             subject,

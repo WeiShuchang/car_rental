@@ -26,29 +26,7 @@ def signup_view(request):
     
     return render(request, 'authentication/signup_page.html', {'form': form})
 
-def verify_email_view(request):
-    if request.method == "POST":
-        email = request.POST.get('email')
-        verification_code = request.POST.get('verification_code')
-        
-        try:
-            user = User.objects.get(email=email)
-            profile = UserProfile.objects.get(user=user)
-            
-            if profile.email_verification_code == verification_code:
-                # Update is_email_confirmed instead of user.is_active
-                profile.is_email_confirmed = True
-                profile.save()
-                messages.success(request, "Email verified! You can now log in.")
-                return redirect('login')
-            else:
-                messages.error(request, "Invalid verification code.")
-        except User.DoesNotExist:
-            messages.error(request, "User not found.")
-        except UserProfile.DoesNotExist:
-            messages.error(request, "User profile not found.")
-    
-    return render(request, 'authentication/verify_email.html')
+
 
 
 def confirm_email_view(request, token):
@@ -72,24 +50,32 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            login(request, user)
-            messages.success(request, "You have successfully logged in.")
-            
-            # Get the user profile and check the role
             try:
+                
+                login(request, user)
                 user_profile = UserProfile.objects.get(user=user)
+                
+                # Check if email is verified
+                if not user_profile.is_email_verified:
+                    messages.warning(request, "Please verify your email first!")
+                    return redirect('verify-email')  # Redirect to verification page
+                
+           
+                messages.success(request, "You have successfully logged in.")
+                
+                # Redirect based on role
                 if user_profile.role == "admin":
                     return redirect("admin_dashboard")
                 elif user_profile.role == "user":
                     return redirect("user_dashboard")
                 elif user_profile.role == "driver":
-                    return redirect("driver_dashboard")  # If you have a separate driver dashboard
+                    return redirect("driver_dashboard")
                 elif user_profile.role == "superadmin":
-                    return redirect("superadmin_dashboard")  # If you have a separate driver dashboard
-                
+                    return redirect("superadmin_dashboard")
+                    
             except UserProfile.DoesNotExist:
                 messages.error(request, "User profile not found.")
-                return redirect("login")  # Redirect back to login if no profile found
+                return redirect("login")
 
         else:
             messages.error(request, "Invalid username or password. Please try again.")

@@ -16,8 +16,8 @@ class UserProfile(models.Model):
     )
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
     contact_number = models.CharField(max_length=20, blank=True, null=True)
-    is_email_confirmed = models.BooleanField(default=False)  # New field
-    email_confirmation_token = models.CharField(max_length=100, blank=True, null=True)  # For confirmation link
+    is_email_verified = models.BooleanField(default=False)  # Renamed for clarity
+    email_verification_code = models.CharField(max_length=100, blank=True, null=True)  # Changed to verification_code
 
     def __str__(self):
         return self.user.username

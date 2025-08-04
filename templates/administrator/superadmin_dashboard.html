@@ -6,6 +6,51 @@
         margin-bottom: 0.25rem; /* adjust as needed */
     }
     
+    .percentage-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        pointer-events: none;
+        z-index: 10;
+    }
+    
+    .chart-wrapper {
+        position: relative;
+        height: 300px;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 0.5rem;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .stat-percentage {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-count {
+        font-size: 0.875rem;
+        color: #495057;
+    }
 </style>
 <div class="page-wrapper">
     <!-- Page header -->
@@ -173,45 +218,107 @@
                 </div>
                 
             </div>
-              <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Reservation Status Distribution</h3>
+            
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Reservation Status Distribution</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-wrapper">
+                                <canvas id="reservationStatusChart"></canvas>
+                            </div>
+                            
+                            <!-- Statistics Grid with Percentages -->
+                            <div class="stats-grid" id="statusStats">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="chart-container" style="position: relative; height:300px;">
-                        <canvas id="reservationStatusChart"></canvas>
+            </div>
+
+            <!-- Analytics Row -->
+            <div class="row mt-4">
+                <!-- Most Booked Cars -->
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-car me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                    <path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                    <path d="M5 17h-2v-6l2 -5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0h-6m-6 -6h15m-6 0v-5" />
+                                </svg>
+                                Most Booked Cars
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-wrapper">
+                                <canvas id="mostBookedCarsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Performing Drivers -->
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-trophy me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <path d="M8 21l8 0" />
+                                    <path d="M12 17l0 4" />
+                                    <path d="M7 4l10 0" />
+                                    <path d="M17 4v8a5 5 0 0 1 -10 0v-8" />
+                                    <path d="M5 9m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                    <path d="M19 9m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                </svg>
+                                Top Performing Drivers
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-wrapper">
+                                <canvas id="topDriversChart"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-        </div>
-        
-  
-    </div>
-
 </div>
 
 <!-- Add this JavaScript at the bottom of your template -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Reservation Status Chart
     const ctx = document.getElementById('reservationStatusChart').getContext('2d');
+    const labels = {{ status_data.labels|safe }};
+    const data = {{ status_data.data|safe }};
+    const total = data.reduce((a, b) => a + b, 0);
+    
+    // Calculate percentages
+    const percentages = data.map(value => Math.round((value / total) * 100));
+    
     const statusChart = new Chart(ctx, {
-        type: 'pie',  // or 'bar', 'doughnut' depending on your preference
+        type: 'pie',
         data: {
-            labels: {{ status_data.labels|safe }},
+            labels: labels,
             datasets: [{
-                data: {{ status_data.data|safe }},
+                data: data,
                 backgroundColor: [
                     '#ffc107',  // pending - yellow
                     '#0d6efd',  // approved - blue
                     '#dc3545',  // cancelled - red
                     '#198754'   // completed - green
                 ],
-                borderWidth: 1
+                borderWidth: 2,
+                borderColor: '#fff'
             }]
         },
         options: {
@@ -220,17 +327,263 @@ document.addEventListener('DOMContentLoaded', function() {
             plugins: {
                 legend: {
                     position: 'right',
+                    labels: {
+                        generateLabels: function(chart) {
+                            const data = chart.data;
+                            if (data.labels.length && data.datasets.length) {
+                                return data.labels.map((label, i) => {
+                                    const dataset = data.datasets[0];
+                                    const value = dataset.data[i];
+                                    const percentage = Math.round((value / total) * 100);
+                                    return {
+                                        text: `${label}: ${value} (${percentage}%)`,
+                                        fillStyle: dataset.backgroundColor[i],
+                                        strokeStyle: dataset.borderColor,
+                                        lineWidth: dataset.borderWidth,
+                                        hidden: false,
+                                        index: i
+                                    };
+                                });
+                            }
+                            return [];
+                        }
+                    }
                 },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
                             let label = context.label || '';
                             let value = context.raw || 0;
-                            let total = context.dataset.data.reduce((a, b) => a + b, 0);
                             let percentage = Math.round((value / total) * 100);
                             return `${label}: ${value} (${percentage}%)`;
                         }
                     }
+                }
+            },
+            // Add text labels on pie slices
+            animation: {
+                onComplete: function() {
+                    const chart = this;
+                    const ctx = chart.ctx;
+                    
+                    ctx.font = 'bold 14px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#fff';
+                    
+                    chart.data.datasets.forEach((dataset, datasetIndex) => {
+                        const meta = chart.getDatasetMeta(datasetIndex);
+                        meta.data.forEach((element, index) => {
+                            const value = dataset.data[index];
+                            const percentage = Math.round((value / total) * 100);
+                            
+                            // Only show percentage if it's greater than 5% to avoid cluttering
+                            if (percentage > 5) {
+                                const position = element.tooltipPosition();
+                                ctx.fillText(`${percentage}%`, position.x, position.y);
+                            }
+                        });
+                    });
+                }
+            }
+        }
+    });
+    
+    // Create statistics grid
+    const statsContainer = document.getElementById('statusStats');
+    const colors = ['#ffc107', '#0d6efd', '#dc3545', '#198754'];
+    
+    labels.forEach((label, index) => {
+        const value = data[index];
+        const percentage = Math.round((value / total) * 100);
+        
+        const statItem = document.createElement('div');
+        statItem.className = 'stat-item';
+        statItem.style.borderColor = colors[index];
+        
+        statItem.innerHTML = `
+            <div class="stat-percentage" style="color: ${colors[index]}">${percentage}%</div>
+            <div class="stat-label">${label}</div>
+            <div class="stat-count">${value} reservations</div>
+        `;
+        
+        statsContainer.appendChild(statItem);
+    });
+
+    // Most Booked Cars Chart
+    const carsCtx = document.getElementById('mostBookedCarsChart').getContext('2d');
+    
+    // Sample data - Replace with your actual data from Django context
+    const carBookingData = {{ car_booking_data|safe|default:"{'labels': ['Toyota Camry', 'Honda Civic', 'BMW X5', 'Nissan Altima', 'Ford Explorer'], 'data': [45, 38, 32, 28, 24]}" }};
+    
+    const carsChart = new Chart(carsCtx, {
+        type: 'horizontalBar',
+        data: {
+            labels: carBookingData.labels,
+            datasets: [{
+                label: 'Total Bookings',
+                data: carBookingData.data,
+                backgroundColor: [
+                    '#0d6efd',
+                    '#198754', 
+                    '#fd7e14',
+                    '#6f42c1',
+                    '#20c997'
+                ],
+                borderColor: [
+                    '#0d6efd',
+                    '#198754',
+                    '#fd7e14', 
+                    '#6f42c1',
+                    '#20c997'
+                ],
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.label}: ${context.raw} bookings`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: {
+                        display: true
+                    }
+                },
+                y: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            animation: {
+                onComplete: function() {
+                    const chart = this;
+                    const ctx = chart.ctx;
+                    
+                    ctx.font = 'bold 12px Arial';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#fff';
+                    
+                    chart.data.datasets.forEach((dataset, datasetIndex) => {
+                        const meta = chart.getDatasetMeta(datasetIndex);
+                        meta.data.forEach((element, index) => {
+                            const value = dataset.data[index];
+                            const x = element.x + 10; // Offset from bar start
+                            const y = element.y;
+                            ctx.fillText(value, x, y);
+                        });
+                    });
+                }
+            }
+        }
+    });
+
+    // Top Performing Drivers Chart
+    const driversCtx = document.getElementById('topDriversChart').getContext('2d');
+    
+    // Sample data - Replace with your actual data from Django context
+    const driverPerformanceData = {{ driver_performance_data|safe|default:"{'labels': ['John Smith', 'Maria Garcia', 'David Johnson', 'Sarah Wilson', 'Mike Brown'], 'data': [89, 76, 68, 62, 55]}" }};
+    
+    const driversChart = new Chart(driversCtx, {
+        type: 'bar',
+        data: {
+            labels: driverPerformanceData.labels,
+            datasets: [{
+                label: 'Completed Trips',
+                data: driverPerformanceData.data,
+                backgroundColor: [
+                    '#ffd700',  // Gold for #1
+                    '#c0c0c0',  // Silver for #2
+                    '#cd7f32',  // Bronze for #3
+                    '#198754',  // Green for others
+                    '#198754'
+                ],
+                borderColor: [
+                    '#ffd700',
+                    '#c0c0c0',
+                    '#cd7f32',
+                    '#198754',
+                    '#198754'
+                ],
+                borderWidth: 2,
+                borderRadius: 6,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const rank = context.dataIndex + 1;
+                            const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '⭐';
+                            return `${medal} ${context.label}: ${context.raw} trips`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        display: true
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 0
+                    }
+                }
+            },
+            animation: {
+                onComplete: function() {
+                    const chart = this;
+                    const ctx = chart.ctx;
+                    
+                    ctx.font = 'bold 12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillStyle = '#495057';
+                    
+                    chart.data.datasets.forEach((dataset, datasetIndex) => {
+                        const meta = chart.getDatasetMeta(datasetIndex);
+                        meta.data.forEach((element, index) => {
+                            const value = dataset.data[index];
+                            const x = element.x;
+                            const y = element.y - 5; // Offset above bar
+                            
+                            // Add medal emoji for top 3
+                            const rank = index + 1;
+                            const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
+                            
+                            ctx.fillText(`${medal} ${value}`, x, y);
+                        });
+                    });
                 }
             }
         }

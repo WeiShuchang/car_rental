@@ -11,5 +11,6 @@ urlpatterns = [
     path('user-approved-reservations/', views.approved_reservations, name='user_approved_reservations'),
     path('user-cancelled-reservations-list/', views.cancelled_reservations_view, name='user_cancelled_reservations'),
     path('history/', views.reservation_history, name='reservation_history'),
-
+    path('verify-email/', views.verify_email_view, name='verify-email'),
+    path('resend-verification/', views.resend_verification, name='resend-verification'),
 ]

@@ -1,22 +1,59 @@
-<!-- templates/authentication/verify_email.html -->
-{% extends 'base.html' %}  <!-- Optional: if you have a base template -->
+{% extends 'user/base.html' %}
 {% block content %}
-<h2>Verify Your Email</h2>
-{% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-    {% endfor %}
-{% endif %}
-<form method="POST">
-    {% csrf_token %}
-    <div>
-        <label for="email">Email:</label>
-        <input type="email" name="email" required>
+<div class="container-fluid d-flex justify-content-center align-items-center min-vh-100 bg-light mt-5">
+    <div class="card shadow-lg" style="width: 100%; max-width: 500px;">
+        <div class="card-body p-5">
+            <div class="text-center mb-4">
+                <h2 class="card-title">Verify Your Email First</h2>
+            <p class="text-dark">Enter the verification code sent to <u>{{ request.user.email }}</u></p>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show d-flex justify-content-center" role="alert">
+                    {{ message }}
+              
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label for="verification_code" class="form-label">Verification Code</label>
+                    <input type="text" class="form-control form-control-lg" id="verification_code" name="verification_code" required>
+                    <div class="invalid-feedback">
+                        Please enter your verification code.
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-center gap-2">
+                    <button type="submit" class="btn btn-dark btn-lg">
+                        Verify Email
+                    </button>
+                     <a href="{% url 'resend-verification' %}" class="mx-2 btn btn-outline-secondary btn-lg">
+                        Resend Code
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
-    <div>
-        <label for="verification_code">Verification Code:</label>
-        <input type="text" name="verification_code" required>
-    </div>
-    <button type="submit">Verify</button>
-</form>
+</div>
+
+<script>
+// Bootstrap form validation
+(function () {
+    'use strict'
+    const forms = document.querySelectorAll('.needs-validation')
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+</script>
 {% endblock %}
